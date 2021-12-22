@@ -1,3 +1,7 @@
 .idea/
-__pycache__/
 *.xlsx
+
+# Distribution / packaging
+.Python
+build/
+__pycache__/
