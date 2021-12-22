@@ -116,5 +116,24 @@ class Backtest(Zakamouline, Whalley_Wilmott):
         elif n == -1:
             p_option = c0 + sn - k if k > sn else c0
         sum_dict = df_transaction[['fee', 's_pml']].sum().to_dict()
-        sum_dict.update({'s': df_delta.s.values[-1], 'no_hedge': p_option*size, 's_acoount': sn * df_transaction.position.values[-1]})
+        sum_dict.update({'s': df_delta.s.values[-1], 'no_hedge': p_option*size, 's_account': sn * df_transaction.position.values[-1]})
         return df_transaction, sum_dict
+
+    def result_output(self, df_summary, k=40):
+        df_summary['interval'] = pd.cut(df_summary.s, bins=[0, 25, 30, 35, 40, 45, 50, 55, 60, 65, 1000],
+                                        labels=['25-', '25-30', '30-35', '35-40', '40-45', '45-50', '50-55', '55-60',
+                                                '60-65', '65+'])
+        df_summary['total_profit'] = df_summary.no_hedge - df_summary.fee
+        df_summary.loc[df_summary > k, 'total_profit'] = df_summary.no_hedge - df_summary.fee + df_summary.s_pml +df_summary.s_account
+        result1 = df_summary.groupby('interval')[['fee', 's_pml', 'no_hedge', 's_account', 'total_profit']].mean().round(2)
+        result1['proportion'] = (df_summary.groupby('interval').count() / len(df_summary)).mean(axis=1)
+
+        res_dic ={
+        'In the money': df_summary.loc[df_summary.s > k + 4, 'total_profit'].mean(),
+         'Out of the money': df_summary.loc[df_summary.s < k, 'total_profit'].mean(),
+         'At the money': df_summary.loc[(df_summary.s >= k) & (df_summary.s <= k + 4), 'total_profit'].mean()
+        }
+        result2 = pd.DataFrame(res_dic, index=['total_profit']).round(2)
+        with pd.ExcelWriter('./result.xlsx') as writer:
+            result1.to_excel(writer, sheet_name='Interval result')
+            result2.to_excel(writer, sheet_name='Total result')
