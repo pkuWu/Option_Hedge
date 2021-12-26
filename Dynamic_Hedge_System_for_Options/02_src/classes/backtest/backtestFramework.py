@@ -35,7 +35,7 @@ class BacktestFramework:
     def export_exceldata(self):
         current_time = str(datetime.now()).replace(':', '：')
         self.check_folder(self.EXCEL_FOLDER)
-        report_name = os.path.join(self.EXCEL_FOLDER,''))
+        report_name = os.path.join(self.EXCEL_FOLDER,'')
         self.backtest_df.to_excel(report_name,index=True)
 
     def visualize(self,report=False):

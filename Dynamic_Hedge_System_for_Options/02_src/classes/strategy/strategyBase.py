@@ -2,7 +2,6 @@ import pandas as pd
 from abc import abstractmethod
 from ..basicData.basicData import BasicData
 class StrategyBase:
-    MULTIPLIER = BasicData.MULTIPLIER
     def __init__(self):
         pass
 

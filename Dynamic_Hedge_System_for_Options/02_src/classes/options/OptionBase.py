@@ -6,8 +6,6 @@ from ..basicData.basicData import BasicData
 from scipy import stats as st
 class OptionBase:
 #%% 初始化
-    all_trade_dates = BasicData.ALL_TRADE_DATES
-    price_dict = BasicData.PRICE_DICT
     def __init__(self):
         self.reset_paras()
         self.greek_columns = ['sigma','left_days','left_times','sigma_T','stock_price','d1','nd1','Nd1','Nd2','delta','gamma','option_price','cash_delta','cash_gamma','option_value']
