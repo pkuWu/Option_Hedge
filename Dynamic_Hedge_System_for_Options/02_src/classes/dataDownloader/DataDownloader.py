@@ -11,6 +11,7 @@ import sqlalchemy as sa
 import os
 import configparser
 
+
 class DataDownloader:
     def __init__(self, ini_file='./classes/dataDownloader/database.ini', section='WIND'):
         self.ini_file = ini_file
@@ -31,21 +32,46 @@ class DataDownloader:
             db_config = {}
         return db_config
 
-    def read_A_mktdata(self, stock_list, bgtdate, enddate):
-        if len(stock_list) == 0:
-            raise Warning('stock_list cannot be None!')
-        elif len(stock_list) == 1:
-            stock_list = f'(\'{stock_list[0]}\')'
-        else:
-            stock_list = tuple(stock_list)
+    def read_A_mktdata(self, bgtdate, enddate, stock_list=None, whole=False):
 
-        query = '''
-            SELECT S_INFO_WINDCODE, TRADE_DT, S_DQ_OPEN, S_DQ_PRECLOSE, S_DQ_CLOSE, S_DQ_PCTCHANGE, S_DQ_VOLUME, S_DQ_ADJFACTOR
-            A_DQ_AVGPRICE, S_DQ_TRADESTATUS
-            FROM FILESYNC.AshareEODPrices
-            WHERE S_INFO_WINDCODE IN {}
-            AND TRADE_DT >= {}
-            AND TRADE_DT <= {}
-            '''.format(stock_list, bgtdate, enddate)
+        if not whole:
+            if len(stock_list) == 0:
+                raise Warning('stock_list cannot be None!')
+            elif len(stock_list) == 1:
+                stock_list = f'(\'{stock_list[0]}\')'
+            else:
+                stock_list = tuple(stock_list)
+
+            query = '''
+                SELECT S_INFO_WINDCODE, TRADE_DT, S_DQ_OPEN, S_DQ_PRECLOSE, S_DQ_CLOSE, S_DQ_PCTCHANGE, S_DQ_VOLUME, S_DQ_ADJFACTOR
+                A_DQ_AVGPRICE, S_DQ_TRADESTATUS
+                FROM FILESYNC.AshareEODPrices
+                WHERE S_INFO_WINDCODE IN {}
+                AND TRADE_DT >= {}
+                AND TRADE_DT <= {}
+                '''.format(stock_list, bgtdate, enddate)
+        else:
+            query = '''
+                SELECT S_INFO_WINDCODE, TRADE_DT, S_DQ_OPEN, S_DQ_PRECLOSE, S_DQ_CLOSE, S_DQ_PCTCHANGE, S_DQ_VOLUME, S_DQ_ADJFACTOR
+                A_DQ_AVGPRICE, S_DQ_TRADESTATUS
+                FROM FILESYNC.AshareEODPrices
+                WHERE TRADE_DT >= {}
+                AND TRADE_DT <= {}
+                '''.format(bgtdate, enddate)
+
+        return pd.read_sql(query, self.eng)
+
+    def read_A_stockInfo(self, columns=None):
+        if columns is None:
+            query = '''
+            SELECT * 
+            FROM FILESYNC.AShareDescription
+            '''
+        else:
+            _columns = ', '.join(columns)
+            query = '''
+            SELECT {}
+            FROM FILESYNC.AShareDescription
+            '''.format(_columns)
 
         return pd.read_sql(query, self.eng)
