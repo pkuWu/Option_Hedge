@@ -33,7 +33,6 @@ class DataDownloader:
         return db_config
 
     def read_A_mktdata(self, bgtdate, enddate, stock_list=None, whole=False):
-
         if not whole:
             if len(stock_list) == 0:
                 raise Warning('stock_list cannot be None!')
@@ -43,8 +42,8 @@ class DataDownloader:
                 stock_list = tuple(stock_list)
 
             query = '''
-                SELECT S_INFO_WINDCODE, TRADE_DT, S_DQ_OPEN, S_DQ_PRECLOSE, S_DQ_CLOSE, S_DQ_PCTCHANGE, S_DQ_VOLUME, S_DQ_ADJFACTOR
-                A_DQ_AVGPRICE, S_DQ_TRADESTATUS
+                SELECT S_INFO_WINDCODE, TRADE_DT, S_DQ_OPEN, S_DQ_PRECLOSE, S_DQ_CLOSE, S_DQ_PCTCHANGE, S_DQ_VOLUME, 
+                S_DQ_ADJFACTOR, A_DQ_AVGPRICE, S_DQ_TRADESTATUS
                 FROM FILESYNC.AshareEODPrices
                 WHERE S_INFO_WINDCODE IN {}
                 AND TRADE_DT >= {}
@@ -52,8 +51,8 @@ class DataDownloader:
                 '''.format(stock_list, bgtdate, enddate)
         else:
             query = '''
-                SELECT S_INFO_WINDCODE, TRADE_DT, S_DQ_OPEN, S_DQ_PRECLOSE, S_DQ_CLOSE, S_DQ_PCTCHANGE, S_DQ_VOLUME, S_DQ_ADJFACTOR
-                A_DQ_AVGPRICE, S_DQ_TRADESTATUS
+                SELECT S_INFO_WINDCODE, TRADE_DT, S_DQ_OPEN, S_DQ_PRECLOSE, S_DQ_CLOSE, S_DQ_PCTCHANGE, S_DQ_VOLUME, 
+                S_DQ_ADJFACTOR, A_DQ_AVGPRICE, S_DQ_TRADESTATUS
                 FROM FILESYNC.AshareEODPrices
                 WHERE TRADE_DT >= {}
                 AND TRADE_DT <= {}
