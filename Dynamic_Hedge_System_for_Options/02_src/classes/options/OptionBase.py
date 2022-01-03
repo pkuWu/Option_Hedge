@@ -8,9 +8,13 @@ class OptionBase:
 #%% 初始化
     def __init__(self):
         self.reset_paras()
-        self.greek_columns = ['sigma','left_days','left_times','sigma_T','stock_price','d1','nd1','Nd1','Nd2','delta','gamma','option_price','cash_delta','cash_gamma','option_value']
+        self.greek_columns = ['sigma','left_days','left_times','sigma_T','stock_price']
+        self.base_type = {'Vanilla': ['call','put'],
+                          'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
+                          'OptionPortfolio':[]}
 
     def reset_paras(self):
+        self.option_type = None
         self.notional = None
         self.stock_code = None
         self.start_date = None
@@ -18,20 +22,21 @@ class OptionBase:
         self.look_back_date = None
         self.K = None
         self.r = 0.04
+        self.H = None
         self.option_fee = None
         self.trade_dates = None
         self.look_back_num = 60
-    
-    def set_paras(self,notional=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_code=None,start_price=None,look_back_num=None):
-        self.set_notional(notional)
-        self.set_start_date(start_date)
-        self.set_end_date(end_date)
-        self.set_K(K)
-        self.set_r(r)
-        self.set_option_fee(option_fee)
-        self.set_stock_code(stock_code)
-        self.set_start_price(start_price)
-        self.set_look_back_num(look_back_num)
+
+    # def set_paras(self,notional=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_code=None,start_price=None,look_back_num=None):
+    #     self.set_notional(notional)
+    #     self.set_start_date(start_date)
+    #     self.set_end_date(end_date)
+    #     self.set_K(K)
+    #     self.set_r(r)
+    #     self.set_option_fee(option_fee)
+    #     self.set_stock_code(stock_code)
+    #     self.set_start_price(start_price)
+    #     self.set_look_back_num(look_back_num)
 
     def set_look_back_num(self,look_back_num=None):
         if look_back_num is not None:
@@ -46,6 +51,13 @@ class OptionBase:
         self.set_option_fee(para_dict.get('option_fee'))
         self.set_stock_code(para_dict.get('stock_code'))
         self.set_start_price(para_dict.get('start_price'))
+        self.set_look_back_num(para_dict.get('look_back_num'))
+        self.set_H(para_dict.get('H'))
+        self.set_option_type(para_dict.get('option_type'))
+
+    def set_option_type(self, option_type=None):
+        if option_type is not None:
+            self.option_type = option_type
     
     def set_notional(self,notional=None):
         if notional is not None:
@@ -82,6 +94,10 @@ class OptionBase:
     def set_stock_code(self,stock_code=None):
         if stock_code is not None:
             self.stock_code = stock_code
+
+    def set_H(self, H=None):
+        if H is not None:
+            self.H = H
             
     def calculate_trade_dates(self):
         start_idx = self.all_trade_dates.index(self.start_date)
@@ -106,6 +122,8 @@ class OptionBase:
         self.greek_df = pd.DataFrame(index=self.trade_dates, columns=self.greek_columns)
         self.calculate_vols()
         self.calculate_other_paras()
+        if self.option_type in self.base_type.get('Barrier'):
+            self.calculate_barrier_paras()
 
 
     def calculate_vols(self):
@@ -117,8 +135,16 @@ class OptionBase:
         self.greek_df.loc[:, 'left_times'] = self.greek_df.loc[:, 'left_days'] / 252
         self.greek_df.loc[:, 'sigma_T'] = self.greek_df.loc[:, 'sigma'] * np.sqrt(self.greek_df.loc[:, 'left_times'])
         self.greek_df.loc[:, 'stock_price'] = self.stock_prices.loc[self.trade_dates]
+
+    def calculate_vanilla_paras(self):
         self.greek_df.loc[:, 'd1'] = (np.log(self.greek_df.loc[:, 'stock_price']/self.K)+self.r*self.greek_df.loc[:, 'left_times'])/self.greek_df.loc[:,'sigma_T']+0.5*self.greek_df.loc[:,'sigma_T']
         self.greek_df.loc[:, 'd2'] = self.greek_df.loc[:, 'd1'] - self.greek_df.loc[:, 'sigma_T']
         self.greek_df.loc[:, 'nd1'] = st.norm.pdf(self.greek_df.loc[:, 'd1'])
         self.greek_df.loc[:, 'Nd1'] = st.norm.cdf(self.greek_df.loc[:, 'd1'])
         self.greek_df.loc[:, 'Nd2'] = st.norm.cdf(self.greek_df.loc[:, 'd2'])
+
+    def calculate_barrier_paras(self):
+        self.greek_df.loc[:, 'Lambda'] = self.r/self.greek_df.loc[:, 'sigma']**2 + 0.5
+        self.greek_df.loc[:, 'y'] = np.log(self.H**2/(self.greek_df.loc[:, 'stock_price']))/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
+        self.greek_df.loc[:, 'xi'] = np.log(self.greek_df.loc[:, 'stock_price']/self.H)/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
+        self.greek_df.loc[:, 'yi'] = np.log(self.H/self.greek_df.loc[:, 'stock_price'])/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
