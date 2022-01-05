@@ -124,6 +124,12 @@ class OptionBase:
         self.calculate_other_paras()
         if self.option_type in self.base_type.get('Barrier'):
             self.calculate_barrier_paras()
+            if ((self.H <= self.K) & (self.base_type in ['cui', 'cdo'])) | ((self.H > self.K) & (self.base_type in ['cuo', 'cdi'])):
+                self.calculate_vanilla_paras()
+            # elif self.H > self.K and self.base_type in ['cuo', 'cdi']:
+            #     self.calculate_vanilla_paras()
+        elif self.option_type in self.base_type.get('Vanilla'):
+            self.calculate_vanilla_paras()
 
 
     def calculate_vols(self):

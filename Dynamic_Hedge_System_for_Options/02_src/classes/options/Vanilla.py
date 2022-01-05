@@ -6,6 +6,10 @@ class VanillaCall(OptionBase):
     def __init__(self):
         super().__init__()
 
+    @staticmethod
+    def bs_method(K, r, left_times, stock_price, Nd1, Nd2):
+        return stock_price * Nd1 - K * np.exp(-r*left_times) * Nd2
+
     def calculate_greeks(self):
         self.calculate_basic_paras()
         self.greek_df.loc[:, 'delta'] = self.greek_df.loc[:, 'Nd1']
@@ -22,6 +26,9 @@ class VanillaCall(OptionBase):
 class VanillaPut(OptionBase):
     def __init__(self):
         super().__init__()
+
+    # @staticmethod
+    # def bs_method():
 
     def calculate_greeks(self):
         self.calculate_basic_paras()
