@@ -1,17 +1,19 @@
 import pandas as pd
 import numpy as np
 from abc import abstractmethod
-from datetime import datetime,timedelta as td
+from datetime import datetime, timedelta as td
 from ..basicData.basicData import BasicData
 from scipy import stats as st
+
+
 class OptionBase:
-#%% 初始化
+    # %% 初始化
     def __init__(self):
         self.reset_paras()
-        self.greek_columns = ['sigma','left_days','left_times','sigma_T','stock_price']
-        self.base_type = {'Vanilla': ['call','put'],
+        self.greek_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_price']
+        self.base_type = {'Vanilla': ['call', 'put'],
                           'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
-                          'OptionPortfolio':[]}
+                          'OptionPortfolio': []}
 
     def reset_paras(self):
         self.option_type = None
@@ -38,11 +40,11 @@ class OptionBase:
     #     self.set_start_price(start_price)
     #     self.set_look_back_num(look_back_num)
 
-    def set_look_back_num(self,look_back_num=None):
+    def set_look_back_num(self, look_back_num=None):
         if look_back_num is not None:
             self.look_back_num = look_back_num
 
-    def set_paras_by_dict(self,para_dict):
+    def set_paras_by_dict(self, para_dict):
         self.set_notional(para_dict.get('notional'))
         self.set_start_date(para_dict.get('start_date'))
         self.set_end_date(para_dict.get('end_date'))
@@ -58,53 +60,53 @@ class OptionBase:
     def set_option_type(self, option_type=None):
         if option_type is not None:
             self.option_type = option_type
-    
-    def set_notional(self,notional=None):
+
+    def set_notional(self, notional=None):
         if notional is not None:
             self.notional = notional
 
-    def set_start_price(self,start_price=None):
+    def set_start_price(self, start_price=None):
         if start_price is not None:
             self.start_price = start_price
 
-    def set_start_date(self,start_date=None):
+    def set_start_date(self, start_date=None):
         if start_date is not None:
             self.start_date = start_date
             if self.end_date is not None:
                 self.calculate_trade_dates()
-    
-    def set_end_date(self,end_date=None):
+
+    def set_end_date(self, end_date=None):
         if end_date is not None:
             self.end_date = end_date
             if self.start_date is not None:
                 self.calculate_trade_dates()
-    
-    def set_K(self,K=None):
+
+    def set_K(self, K=None):
         if K is not None:
             self.K = K
-    
-    def set_r(self,r=None):
+
+    def set_r(self, r=None):
         if r is not None:
             self.r = r
-            
-    def set_option_fee(self,option_fee=None):
+
+    def set_option_fee(self, option_fee=None):
         if option_fee is not None:
             self.option_fee = option_fee
 
-    def set_stock_code(self,stock_code=None):
+    def set_stock_code(self, stock_code=None):
         if stock_code is not None:
             self.stock_code = stock_code
 
     def set_H(self, H=None):
         if H is not None:
             self.H = H
-            
+
     def calculate_trade_dates(self):
         start_idx = self.all_trade_dates.index(self.start_date)
-        end_idx = self.all_trade_dates.index(self.end_date)+1
+        end_idx = self.all_trade_dates.index(self.end_date) + 1
         self.trade_dates = self.all_trade_dates[start_idx:end_idx]
-        self.look_back_date = self.all_trade_dates[start_idx-self.look_back_num]
-        self.look_back_dates = self.all_trade_dates[start_idx-self.look_back_num:end_idx]
+        self.look_back_date = self.all_trade_dates[start_idx - self.look_back_num]
+        self.look_back_dates = self.all_trade_dates[start_idx - self.look_back_num:end_idx]
         self.trade_dates_length = len(self.trade_dates)
 
     @abstractmethod
@@ -115,7 +117,7 @@ class OptionBase:
         if self.stock_code is None:
             print('股票代码未设定')
             return -1
-        self.stock_prices = self.price_dict['close'].loc[self.look_back_dates,self.stock_code]
+        self.stock_prices = self.price_dict['close'].loc[self.look_back_dates, self.stock_code]
 
     def calculate_basic_paras(self):
         self.get_stock_prices()
@@ -124,20 +126,20 @@ class OptionBase:
         self.calculate_other_paras()
         if self.option_type in self.base_type.get('Barrier'):
             self.calculate_barrier_paras()
-            if ((self.H <= self.K) & (self.base_type in ['cui', 'cdo'])) | ((self.H > self.K) & (self.base_type in ['cuo', 'cdi'])):
+            if ((self.H <= self.K) & (self.base_type in ['cui', 'cdo'])) | (
+                    (self.H > self.K) & (self.base_type in ['cuo', 'cdi'])):
                 self.calculate_vanilla_paras()
             # elif self.H > self.K and self.base_type in ['cuo', 'cdi']:
             #     self.calculate_vanilla_paras()
         elif self.option_type in self.base_type.get('Vanilla'):
             self.calculate_vanilla_paras()
 
-
     def calculate_vols(self):
         vol = self.stock_prices.pct_change().rolling(self.look_back_num).std() * np.sqrt(252)
         self.greek_df.loc[:, 'sigma'] = vol.dropna()
 
     def calculate_other_paras(self):
-        self.greek_df.loc[:, 'left_days'] = np.linspace(self.trade_dates_length-1, 0.0001, self.trade_dates_length)
+        self.greek_df.loc[:, 'left_days'] = np.linspace(self.trade_dates_length - 1, 0.0001, self.trade_dates_length)
         self.greek_df.loc[:, 'left_times'] = self.greek_df.loc[:, 'left_days'] / 252
         self.greek_df.loc[:, 'sigma_T'] = self.greek_df.loc[:, 'sigma'] * np.sqrt(self.greek_df.loc[:, 'left_times'])
         self.greek_df.loc[:, 'stock_price'] = self.stock_prices.loc[self.trade_dates]
@@ -154,3 +156,10 @@ class OptionBase:
         self.greek_df.loc[:, 'y'] = np.log(self.H**2/(self.greek_df.loc[:, 'stock_price']))/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
         self.greek_df.loc[:, 'xi'] = np.log(self.greek_df.loc[:, 'stock_price']/self.H)/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
         self.greek_df.loc[:, 'yi'] = np.log(self.H/self.greek_df.loc[:, 'stock_price'])/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
+
+    def calculate_return_decomposition(self):
+        self.greek_df.loc[:,'delta_option_price'] = self.greek_df[:,'option_price'].diff().fillna(0)
+        self.greek_df.loc[:,'decomposition_delta'] = self.greek_df[:,'delta']*self.greek_df[:,'stock_price'].diff().fillna(0)
+        self.greek_df.loc[:,'decomposition_gamma'] = self.greek_df[:,'gamma']*0.5*self.greek_df[:,'stock_price'].diff().fillna(0)**2
+        self.greek_df.loc[:,'decomposition_theta'] = self.greek_df[:,'theta']*self.greek_df.loc[:, 'left_days'].diff().fillna(0)
+        self.greek_df.loc[:,'decomposition_vega'] = self.greek_df[:,'vega']*self.greek_df.loc[:,'sigma'].diff().fillna(0)

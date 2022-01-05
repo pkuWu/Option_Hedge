@@ -6,9 +6,9 @@
 """
 import pandas as pd
 import numpy as np
-import pickle
+import pickle5 as pickle
 
-df_all = pd.read_pickle('./data/Wind_data/2019_2021_mktdata.pkl')
+df_all = pd.read_pickle('./data/python_data/2019_2021_mktdata.pkl')
 
 def dataTransform(df_all, col):
     df_transform = df_all[['s_info_windcode', 'trade_dt', col]].copy(deep=False)

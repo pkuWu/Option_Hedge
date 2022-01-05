@@ -10,6 +10,5 @@ for i in range(3):
         df_result = df_part.copy()
     else:
         df_result.append(df_part.copy())
-
-df_result.to_pickle('./data/Wind_data/2011_2021_mktdata.pk')
+df_result.to_pickle('./data/Wind_data/2011_2021_mktdata.pkl')
 print(df_result)
