@@ -17,10 +17,10 @@ class VanillaCall(OptionBase):
         self.greek_df.loc[:, 'option_price'] = self.greek_df.loc[:, 'stock_price']*self.greek_df.loc[:, 'Nd1']-self.K*np.exp(-self.r*self.greek_df.loc[:, 'left_times'])*self.greek_df.loc[:, 'Nd2']
         self.greek_df.loc[:, 'cash_delta'] = self.greek_df.loc[:, 'delta']*self.greek_df.loc[:, 'stock_price']*self.notional/self.start_price
         self.greek_df.loc[:, 'cash_gamma'] = self.greek_df.loc[:, 'gamma']*np.power(self.greek_df.loc[:, 'stock_price'],2)*self.notional/self.start_price/100
-        self.greek_df.loc[:, 'pos_vega'] = self.greek_df.loc[:, 'vega']*self.notional/self.start_price
-        self.greek_df.loc[:, 'cash_theta'] = self.greek_df.loc[:, 'theta']/252*self.notional/self.start_price
         self.greek_df.loc[:, 'vega'] = self.greek_df.loc[:, 'nd1']*self.greek_df.loc[:, 'stock_price']*np.sqrt(self.greek_df.loc[:, 'left_times'])
+        self.greek_df.loc[:, 'pos_vega'] = self.greek_df.loc[:, 'vega']*self.notional/self.start_price
         self.greek_df.loc[:, 'theta'] = -self.greek_df.loc[:, 'stock_price']*self.greek_df.loc[:, 'nd1']*self.greek_df.loc[:,'sigma']/2/np.sqrt(self.greek_df.loc[:, 'left_times'])-self.r*self.K*np.exp(-self.r*self.greek_df.loc[:, 'left_times'])*self.greek_df.loc[:, 'Nd2']
+        self.greek_df.loc[:, 'cash_theta'] = self.greek_df.loc[:, 'theta']/252*self.notional/self.start_price
         self.greek_df.loc[:, 'option_value'] = self.greek_df.loc[:, 'option_price']*self.notional/self.start_price
 
 

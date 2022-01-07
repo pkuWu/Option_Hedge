@@ -8,14 +8,15 @@ from scipy import stats as st
 
 class OptionBase:
     # %% 初始化
-    all_trade_dates = BasicData.basicData['trade_dates']
-    price_dict = BasicData.PRICE_DICT
+    # all_trade_dates = BasicData.basicData['trade_dates']
+    price_dict = BasicData.basicData
     greek_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_price']
     base_type = {'Vanilla': ['call', 'put'],
                       'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
                       'OptionPortfolio': []}
     def __init__(self):
         self.reset_paras()
+        self.all_trade_dates = BasicData.basicData['close'].index.to_list()
 
     def reset_paras(self):
         self.option_type = None
@@ -30,7 +31,7 @@ class OptionBase:
         self.H = None
         self.option_fee = None
         self.trade_dates = None
-        self.look_back_num = 60
+        self.look_back_num = 10
 
     # def set_paras(self,notional=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_code=None,start_price=None,look_back_num=None):
     #     self.set_notional(notional)
