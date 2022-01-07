@@ -3,17 +3,25 @@
 # @Time    : 2021/12/28 21:58
 # @Author  : Hao Wu
 # @File    : .py
-# from classes.basicData.basicData import BasicData
-# data = BasicData.basicData
-# print(data['trade_dates'])
-#
-# from classes.options import Vanilla
-#
-# option = Vanilla.VanillaCall()
-# option.calculate_greeks()
-
-import pandas as pd
-import numpy as np
-a = pd.DataFrame(data=np.random.random((2,3)))
-print(a)
-print(a.diff().fillna(0)**2)
+from classes.backtest.backtestFramework import BacktestFramework
+from datetime import date
+from classes.options.Vanilla import VanillaCall
+from classes.options.OptionBase import OptionBase
+backtest = BacktestFramework()
+vanilla = VanillaCall()
+option = OptionBase()
+backtest.reset()
+para_dict={'notional':12e6,
+           'start_date':'20190129',
+           'end_date':'20191230',
+           'K':5.42,
+           'option_fee':1780800,
+           'stock_code':'300277.SZ',
+           'start_price':6.02,
+           'option_type':'call'}
+backtest.set_option(para_dict)
+option.stock_code
+vanilla.calculate_greeks()
+vanilla.greek_df
+backtest.set_strategy('HedgeAll')
+backtest.run_backtest()
