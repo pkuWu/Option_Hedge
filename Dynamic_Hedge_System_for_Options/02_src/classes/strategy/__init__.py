@@ -1,6 +1,6 @@
 from . import strategyBase
-from . import HedgeAll
+from . import hedgeAll
 from . import hedgeHalf
-from .HedgeAll import HedgeAll
+from .hedgeAll import HedgeAll
 from .hedgeHalf import HedgeHalf
-__all__ = ['HedgeAll','HedgeHalf','WW_Hedge']
+__all__ = ['HedgeAll','HedgeHalf']

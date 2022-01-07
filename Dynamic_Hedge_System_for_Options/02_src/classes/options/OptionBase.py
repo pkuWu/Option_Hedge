@@ -8,21 +8,18 @@ from scipy import stats as st
 
 class OptionBase:
     # %% 初始化
-    all_trade_dates = BasicData.basicData['trade_dates']
-    price_dict = BasicData.PRICE_DICT
-    greek_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_price']
-    base_type = {'Vanilla': ['call', 'put'],
-                      'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
-                      'OptionPortfolio': []}
     def __init__(self):
         self.reset_paras()
+        self.greek_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_price']
+        self.base_type = {'Vanilla': ['call', 'put'],
+                          'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
+                          'OptionPortfolio': []}
 
     def reset_paras(self):
         self.option_type = None
         self.notional = None
         self.stock_code = None
         self.start_date = None
-        self.start_price =None
         self.end_date = None
         self.look_back_date = None
         self.K = None
@@ -59,7 +56,6 @@ class OptionBase:
         self.set_look_back_num(para_dict.get('look_back_num'))
         self.set_H(para_dict.get('H'))
         self.set_option_type(para_dict.get('option_type'))
-        self.set_stock_num()
 
     def set_option_type(self, option_type=None):
         if option_type is not None:
@@ -104,10 +100,6 @@ class OptionBase:
     def set_H(self, H=None):
         if H is not None:
             self.H = H
-
-    def set_stock_num(self):
-        if self.start_price is not None:
-            self.stock_num = self.notional / self.start_price
 
     def calculate_trade_dates(self):
         start_idx = self.all_trade_dates.index(self.start_date)
@@ -166,13 +158,8 @@ class OptionBase:
         self.greek_df.loc[:, 'yi'] = np.log(self.H/self.greek_df.loc[:, 'stock_price'])/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
 
     def calculate_return_decomposition(self):
-        self.greek_df.loc[:,'option_value_change'] = self.greek_df[:,'option_value'].diff().fillna(0)
-        self.greek_df.loc[:,'delta_value'] = self.greek_df[:,'delta']*self.greek_df[:,'stock_price'].diff().fillna(0)*self.stock_num
-        self.greek_df.loc[:,'gamma_value'] = self.greek_df[:,'gamma']*0.5*self.greek_df[:,'stock_price'].diff().fillna(0)**2*self.stock_num
-        self.greek_df.loc[:,'theta_value'] = self.greek_df[:,'theta']/252*self.stock_num
-        self.greek_df.loc[0,'theta_value'] = 0
-        self.greek_df.loc[:,'vega_value'] = self.greek_df[:,'vega']*self.greek_df.loc[:,'sigma'].diff().fillna(0)*self.stock_num
-
-    def calculate_decomposition(self):
-        self.calculate_greeks()
-        self.calculate_return_decomposition()
+        self.greek_df.loc[:,'delta_option_price'] = self.greek_df[:,'option_price'].diff().fillna(0)
+        self.greek_df.loc[:,'decomposition_delta'] = self.greek_df[:,'delta']*self.greek_df[:,'stock_price'].diff().fillna(0)
+        self.greek_df.loc[:,'decomposition_gamma'] = self.greek_df[:,'gamma']*0.5*self.greek_df[:,'stock_price'].diff().fillna(0)**2
+        self.greek_df.loc[:,'decomposition_theta'] = self.greek_df[:,'theta']*self.greek_df.loc[:, 'left_days'].diff().fillna(0)
+        self.greek_df.loc[:,'decomposition_vega'] = self.greek_df[:,'vega']*self.greek_df.loc[:,'sigma'].diff().fillna(0)
