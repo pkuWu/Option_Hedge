@@ -5,6 +5,7 @@ from datetime import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 from ..basicData.basicData import BasicData
 from ..options.OptionData import OptionData
+from ..options.OptionBase import OptionBase
 from ..strategy import *
 import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -21,13 +22,17 @@ class BacktestFramework:
     def reset(self):
         self.option_data = OptionData()
         self.set_strategy()
+        self.option_base = OptionBase()
 
     def set_strategy(self, strategy_name=''):
         self.strategy_name = strategy_name
         self.strategy = None if not strategy_name else eval(strategy_name)()
 
-    def set_option(self,option_class,option_position,**option_paras):
-        self.option_data.set_option_by_dict(option_class,option_position,option_paras)
+    # def set_option(self,option_class,option_position,**option_paras):
+    #     self.option_data.set_option_by_dict(option_class,option_position,option_paras)
+
+    def set_option(self,para_dict):
+        self.option_base.set_paras_by_dict(para_dict)
 
     def run_backtest(self):
         pass

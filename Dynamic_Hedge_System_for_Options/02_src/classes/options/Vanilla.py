@@ -23,9 +23,6 @@ class VanillaCall(OptionBase):
         self.greek_df.loc[:, 'theta'] = -self.greek_df.loc[:, 'stock_price']*self.greek_df.loc[:, 'nd1']*self.greek_df.loc[:,'sigma']/2/np.sqrt(self.greek_df.loc[:, 'left_times'])-self.r*self.K*np.exp(-self.r*self.greek_df.loc[:, 'left_times'])*self.greek_df.loc[:, 'Nd2']
         self.greek_df.loc[:, 'option_value'] = self.greek_df.loc[:, 'option_price']*self.notional/self.start_price
 
-    def calculate_VanillaCall_decomposition(self):
-        self.calculate_greeks()
-        self.calculate_return_decomposition()
 
 class VanillaPut(OptionBase):
     def __init__(self):
@@ -47,6 +44,3 @@ class VanillaPut(OptionBase):
         self.greek_df.loc[:, 'theta'] = -self.greek_df.loc[:, 'stock_price']*self.greek_df.loc[:, 'nd1']*self.greek_df.loc[:,'sigma']/2/np.sqrt(self.greek_df.loc[:, 'left_times'])-self.r*self.K*np.exp(-self.r*self.greek_df.loc[:, 'left_times'])*(self.greek_df.loc[:, 'Nd2']-1)
         self.greek_df.loc[:, 'option_value'] = self.greek_df.loc[:, 'option_price']*self.notional/self.start_price
 
-    def calculate_VanillaPut_decomposition(self):
-        self.calculate_greeks()
-        self.calculate_return_decomposition()
