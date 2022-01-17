@@ -41,13 +41,13 @@ class BacktestFramework:
         current_time = str(datetime.now()).replace(':', '：')
         self.check_folder(self.EXCEL_FOLDER)
         report_name = os.path.join(self.EXCEL_FOLDER,'')
-        self.backtest_df.to_excel(report_name,index=True)
+        self.backtest_df.to_excel(report_name, index=True)
 
     def visualize(self,report=False):
         if report:
             current_time = str(datetime.now()).replace(':', '：')
             self.check_folder(self.REPORT_FOLDER)
-            report_name = os.path.join(self.REPORT_FOLDER,'')
+            report_name = os.path.join(self.REPORT_FOLDER, '')
             with PdfPages(report_name) as pdf:
                 pass
 
@@ -55,7 +55,7 @@ class BacktestFramework:
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):
         fig = plt.figure(figsize=(10, 5.7), dpi=300)
         ax = fig.add_axes(rect=rect)
-        return fig,ax
+        return fig, ax
         
     @staticmethod
     def cal_MDD(series):

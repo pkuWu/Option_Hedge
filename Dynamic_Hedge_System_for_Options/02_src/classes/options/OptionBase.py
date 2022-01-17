@@ -9,7 +9,6 @@ from scipy import stats as st
 class OptionBase:
     # %% 初始化
     # all_trade_dates = BasicData.basicData['trade_dates']
-    price_dict = BasicData.basicData
     greek_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_price']
     base_type = {'Vanilla': ['call', 'put'],
                       'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
@@ -126,7 +125,7 @@ class OptionBase:
         if self.stock_code is None:
             print('股票代码未设定')
             return -1
-        self.stock_prices = self.price_dict['close'].loc[self.look_back_dates, self.stock_code]
+        self.stock_prices = BasicData.basicData['close'].loc[self.look_back_dates, self.stock_code]
 
     def calculate_basic_paras(self):
         self.get_stock_prices()
@@ -167,13 +166,12 @@ class OptionBase:
         self.greek_df.loc[:, 'yi'] = np.log(self.H/self.greek_df.loc[:, 'stock_price'])/self.greek_df.loc[:, 'sigma_T'] + self.greek_df.loc[:, 'Lambda']*self.greek_df.loc[:, 'sigma_T']
 
     def calculate_return_decomposition(self):
-        self.greek_df.loc[:,'option_value_change'] = self.greek_df[:,'option_value'].diff().fillna(0)
-        self.greek_df.loc[:,'delta_value'] = self.greek_df[:,'delta']*self.greek_df[:,'stock_price'].diff().fillna(0)*self.stock_num
-        self.greek_df.loc[:,'gamma_value'] = self.greek_df[:,'gamma']*0.5*self.greek_df[:,'stock_price'].diff().fillna(0)**2*self.stock_num
-        self.greek_df.loc[:,'theta_value'] = self.greek_df[:,'theta']/252*self.stock_num
+        self.greek_df.loc[:,'option_value_change'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
+        self.greek_df.loc[:,'delta_value'] = self.greek_df.loc[:,'delta']*self.greek_df.loc[:,'stock_price'].diff().fillna(0)*self.stock_num
+        self.greek_df.loc[:,'gamma_value'] = self.greek_df.loc[:,'gamma']*0.5*self.greek_df.loc[:,'stock_price'].diff().fillna(0)**2*self.stock_num
+        self.greek_df.loc[:,'theta_value'] = self.greek_df.loc[:,'theta']/252*self.stock_num
         self.greek_df.loc[0,'theta_value'] = 0
-        self.greek_df.loc[:,'vega_value'] = self.greek_df[:,'vega']*self.greek_df.loc[:,'sigma'].diff().fillna(0)*self.stock_num
-
+        self.greek_df.loc[:,'vega_value'] = self.greek_df.loc[:,'vega']*self.greek_df.loc[:,'sigma'].diff().fillna(0)*self.stock_num
 
     def calculate_decomposition(self):
         self.calculate_greeks()
