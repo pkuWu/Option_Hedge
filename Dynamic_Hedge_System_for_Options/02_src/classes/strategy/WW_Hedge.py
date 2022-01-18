@@ -3,11 +3,6 @@
 # @Time    : 2022/1/7 17:07
 # @Author  : Hao Wu
 # @File    : .py
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
-# @Time    : 2021/12/29 21:46
-# @Author  : Hao Wu
-# @File    :
 import pandas as pd
 import numpy as np
 from .strategyBase import StrategyBase
@@ -15,7 +10,7 @@ from .strategyBase import StrategyBase
 
 class WW_Hedge(StrategyBase):
     def __init__(self):
-        super(WW_Hedge, self).__init__()
+        super().__init__()
 
     def get_hedging_position(self,greek_df,**kwargs):
         # kwargs= {'r':r,'lambda':lambda,'size':size,'gamma':gamma}
