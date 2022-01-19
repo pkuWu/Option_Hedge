@@ -10,11 +10,10 @@ class OptionBase:
     all_trade_dates = BasicData.ALL_TRADE_DATES
     price_dict = BasicData.PRICE_DICT
 
-
     def __init__(self):
         self.reset_paras()
         self.greek_columns = ['sigma','left_days','left_times','sigma_T','stock_index_price','d1', 'nd1', 'Nd1', 'Nd2',
-                              'option_price','delta','gamma','cash_delta','cash_gamma','vega','theta','option_value']
+                              'option_price','delta','gamma','theta','cash_delta','cash_gamma','cash_theta','vega','option_value']
         self.option_type = {'vanilla':['call','put'],
                             #待加入：障碍、美式、etc
                             }
@@ -115,7 +114,6 @@ class OptionBase:
         self.greek_df = pd.DataFrame(index=self.trade_dates, columns=self.greek_columns)
         self.calculate_vols()
         self.calculate_other_paras()
-
 
     def calculate_vols(self):
         vol = self.stock_index_prices.pct_change().rolling(self.look_back_num).std() * np.sqrt(252)
