@@ -13,29 +13,34 @@ from classes.strategy.Zakamouline import Zakamouline
 vanilla = VanillaCall()
 ww_hedge = WW_Hedge()
 zakamouline = Zakamouline()
-para_dict={'notional':12e6,
-           'start_date':'20190129',
-           'end_date':'20191230',
-           'K':5.42,
-           'option_fee':1780800,
-           'stock_code':'300277.SZ',
-           'start_price':6.19,
-           'option_type':'call'}
-# backtest.set_option(para_dict)
-# option.stock_code
-vanilla.set_paras_by_dict(para_dict)
+
+# test for Vanilla
+vanilla.set_paras(notional=12e6,
+                  start_date='20190129',
+                  end_date='20191231',
+                  K=5.42,
+                  option_fee=1780800,
+                  stock_code='300277.SZ',
+                  start_price=6.19)
 vanilla.calculate_greeks()
 vanilla.calculate_decomposition()
+greek_df = vanilla.return_result()
 
-kwargs = {'r':0.04,
-          'lambda':0.00005,
-          'size':para_dict.get('notional')/para_dict.get('start_price'),
-          'gamma':1,
-          'K':5.42}
-ww_hedge.get_hedging_position(vanilla.greek_df,**kwargs)
-zakamouline.get_hedging_position(vanilla.greek_df,**kwargs)
-ww_hedge.hedge_visualization(vanilla.greek_df)
-zakamouline.hedge_visualization(vanilla.greek_df)
+# test for strategy
+df_hedge_ww = ww_hedge.get_hedging_position(greek_df,
+                              r=0.04,
+                              Lambda=0.00005,
+                              size=12e6/6.19//100*100,
+                              gamma=0.5,
+                              K=5.42)
+df_hedge_zaka = zakamouline.get_hedging_position(greek_df,
+                              r=0.04,
+                              Lambda=0.00005,
+                              size=12e6/6.19//100*100,
+                              gamma=0.5,
+                              K=5.42)
+ww_hedge.hedge_visualization(greek_df)
+zakamouline.hedge_visualization(greek_df)
 
 b = Backtest()
 b.run_backtest(ww_hedge.df_hedge.loc[:, ['stock_price', 'position']])
