@@ -10,7 +10,7 @@ class OptionBase:
     # %% 初始化
     # all_trade_dates = BasicData.basicData['trade_dates']
     greek_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_price']
-    base_type = {'Vanilla': ['call', 'put'],
+    base_type = {'Vanilla': ['VanillaCall', 'VanillaPut'],
                       'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
                       'OptionPortfolio': []}
     def __init__(self):
@@ -18,7 +18,7 @@ class OptionBase:
         self.all_trade_dates = BasicData.basicData['close'].index.to_list()
 
     def reset_paras(self):
-        self.option_type = None
+
         self.notional = None
         self.stock_code = None
         self.start_date = None
@@ -32,16 +32,17 @@ class OptionBase:
         self.trade_dates = None
         self.look_back_num = 10
 
-    # def set_paras(self,notional=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_code=None,start_price=None,look_back_num=None):
-    #     self.set_notional(notional)
-    #     self.set_start_date(start_date)
-    #     self.set_end_date(end_date)
-    #     self.set_K(K)
-    #     self.set_r(r)
-    #     self.set_option_fee(option_fee)
-    #     self.set_stock_code(stock_code)
-    #     self.set_start_price(start_price)
-    #     self.set_look_back_num(look_back_num)
+    def set_paras(self,notional=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_code=None,start_price=None,look_back_num=None):
+        self.set_notional(notional)
+        self.set_start_date(start_date)
+        self.set_end_date(end_date)
+        self.set_K(K)
+        self.set_r(r)
+        self.set_option_fee(option_fee)
+        self.set_stock_code(stock_code)
+        self.set_start_price(start_price)
+        self.set_look_back_num(look_back_num)
+        self.set_stock_num()
 
     def set_look_back_num(self, look_back_num=None):
         if look_back_num is not None:
@@ -58,12 +59,8 @@ class OptionBase:
         self.set_start_price(para_dict.get('start_price'))
         self.set_look_back_num(para_dict.get('look_back_num'))
         self.set_H(para_dict.get('H'))
-        self.set_option_type(para_dict.get('option_type'))
         self.set_stock_num()
 
-    def set_option_type(self, option_type=None):
-        if option_type is not None:
-            self.option_type = option_type
 
     def set_notional(self, notional=None):
         if notional is not None:
@@ -132,14 +129,15 @@ class OptionBase:
         self.greek_df = pd.DataFrame(index=self.trade_dates, columns=self.greek_columns)
         self.calculate_vols()
         self.calculate_other_paras()
-        if self.option_type in self.base_type.get('Barrier'):
+        Option_type = str(type(self)).strip('>,<,\'').split('.')[-1]
+        if Option_type in self.base_type.get('Barrier'):
             self.calculate_barrier_paras()
             if ((self.H <= self.K) & (self.base_type in ['cui', 'cdo'])) | (
                     (self.H > self.K) & (self.base_type in ['cuo', 'cdi'])):
                 self.calculate_vanilla_paras()
             # elif self.H > self.K and self.base_type in ['cuo', 'cdi']:
             #     self.calculate_vanilla_paras()
-        elif self.option_type in self.base_type.get('Vanilla'):
+        elif Option_type in self.base_type.get('Vanilla'):
             self.calculate_vanilla_paras()
 
     def calculate_vols(self):
@@ -170,9 +168,12 @@ class OptionBase:
         self.greek_df.loc[:,'delta_value'] = self.greek_df.loc[:,'delta']*self.greek_df.loc[:,'stock_price'].diff().fillna(0)*self.stock_num
         self.greek_df.loc[:,'gamma_value'] = self.greek_df.loc[:,'gamma']*0.5*self.greek_df.loc[:,'stock_price'].diff().fillna(0)**2*self.stock_num
         self.greek_df.loc[:,'theta_value'] = self.greek_df.loc[:,'theta']/252*self.stock_num
-        self.greek_df.loc[0,'theta_value'] = 0
+        self.greek_df.loc[self.greek_df.index[0],'theta_value'] = 0
         self.greek_df.loc[:,'vega_value'] = self.greek_df.loc[:,'vega']*self.greek_df.loc[:,'sigma'].diff().fillna(0)*self.stock_num
 
     def calculate_decomposition(self):
         self.calculate_greeks()
         self.calculate_return_decomposition()
+
+    def return_result(self):
+        return self.greek_df

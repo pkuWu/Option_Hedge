@@ -12,20 +12,36 @@ class Zakamouline(StrategyBase):
     def __init__(self):
         super(Zakamouline, self).__init__()
 
+    def reset_paras(self):
+        self.gamma = None
+        self.Lambda = None
+
+    def set_paras(self,gamma=None,Lambda=None):
+        self.set_gamma(gamma)
+        self.set_Lambda(Lambda)
+
+    def set_gamma(self,gamma=None):
+        if gamma is not None:
+            self.gamma = gamma
+
+    def set_Lambda(self,Lambda=None):
+        if Lambda is not None:
+            self.Lambda = Lambda
 
     def get_hedging_position(self,greek_df,**kwargs):
         # kwargs= {'r':r,'lambda':lambda,'size':size,'K':K}
         # size = notional/start_price
+        self.set_paras(kwargs['gamma'],kwargs['Lambda'])
         greek_df = greek_df.reset_index()
         self.df_hedge = pd.DataFrame(columns=['H0','H1','delta','up_bound','low_bound'])
-        self.df_hedge.loc[:,'H0'] = kwargs['lambda']/(kwargs['gamma']*greek_df.loc[:,'stock_price']*np.power(greek_df.loc[:,'sigma'],2)*greek_df.loc[:,'left_times'])
+        self.df_hedge.loc[:,'H0'] = kwargs['Lambda']/(kwargs['gamma']*greek_df.loc[:,'stock_price']*np.power(greek_df.loc[:,'sigma'],2)*greek_df.loc[:,'left_times'])
 
-        self.df_hedge.loc[:,'H1'] = 1.12*np.power(kwargs['lambda'],0.31)*\
+        self.df_hedge.loc[:,'H1'] = 1.12*np.power(kwargs['Lambda'],0.31)*\
                                np.power(greek_df.loc[:,'left_times'],0.05)*\
                                np.power((np.exp(-kwargs['r']*greek_df.loc[:,'left_times'])/greek_df.loc[:,'sigma']),0.25)*\
                                np.power(greek_df.loc[:,'gamma']/kwargs['gamma'],0.5)
 
-        self.df_hedge.loc[:,'K'] = -4.76*np.power(kwargs['lambda'],0.78)/\
+        self.df_hedge.loc[:,'K'] = -4.76*np.power(kwargs['Lambda'],0.78)/\
                               np.power(greek_df.loc[:,'left_times'],0.02)*\
                               np.power((np.exp(-kwargs['r']*greek_df.loc[:,'left_times'])/greek_df.loc[:,'sigma']),0.25)*\
                               np.power(kwargs['gamma']*np.power(greek_df.loc[:,'stock_price'],2)*np.abs(greek_df.loc[:,'gamma']),0.15)
@@ -45,3 +61,4 @@ class Zakamouline(StrategyBase):
                 position_rate = position/kwargs['size']
             self.df_hedge.loc[i, 'position'] = position
             self.df_hedge.loc[i,'position_rate'] = position_rate
+        return self.df_hedge
