@@ -9,8 +9,9 @@ from .strategyBase import StrategyBase
 from scipy import stats as st
 
 class Zakamouline(StrategyBase):
+
     def __init__(self):
-        super(Zakamouline, self).__init__()
+        super().__init__()
 
     def reset_paras(self):
         self.gamma = None
