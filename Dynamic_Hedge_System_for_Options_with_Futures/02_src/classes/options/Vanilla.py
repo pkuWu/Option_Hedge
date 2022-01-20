@@ -19,6 +19,9 @@ class VanillaCall(OptionBase):
         # self.greek_df.loc[:, 'pos_vega'] = self.greek_df.loc[:, 'vega']*self.notional/self.start_price
         self.greek_df.loc[:, 'option_value'] = self.greek_df.loc[:, 'option_price']*self.notional/self.start_price
 
+    def return_result(self):
+        return self.greek_df
+
 class VanillaPut(OptionBase):
     def __init__(self):
         super().__init__()
@@ -35,3 +38,6 @@ class VanillaPut(OptionBase):
         self.greek_df.loc[:, 'vega'] = self.greek_df.loc[:, 'nd1']*self.greek_df.loc[:, 'stock_index_price']*np.sqrt(self.greek_df.loc[:, 'left_times'])
         # self.greek_df.loc[:, 'pos_vega'] = self.greek_df.loc[:, 'vega']*self.notional/self.start_price
         self.greek_df.loc[:, 'option_value'] = self.greek_df.loc[:, 'option_price']*self.notional/self.start_price
+
+    def return_result(self):
+        return self.greek_df

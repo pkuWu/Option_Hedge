@@ -110,12 +110,12 @@ class OptionBase:
         self.stock_index_prices = self.price_dict['close'].loc[self.look_back_dates,self.stock_index_code]
 
     def calculate_basic_paras(self):
-        self.get_stock_index_prices()
         self.greek_df = pd.DataFrame(index=self.trade_dates, columns=self.greek_columns)
         self.calculate_vols()
         self.calculate_other_paras()
 
     def calculate_vols(self):
+        self.get_stock_index_prices()
         vol = self.stock_index_prices.pct_change().rolling(self.look_back_num).std() * np.sqrt(252)
         self.greek_df.loc[:, 'sigma'] = vol.dropna()
 
