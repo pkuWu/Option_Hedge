@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 from ..basicData.basicData import BasicData
-from ..options.OptionData import OptionData
 from ..strategy import *
 import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif'] = ['SimHei']
