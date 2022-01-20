@@ -5,14 +5,14 @@ import pandas as pd
 class OptionContract:
     all_trade_dates = BasicData.ALL_TRADE_DATES
     price_dict = BasicData.PRICE_DICT
+    public_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_index_price']
+    greek_columns = ['cash_delta', 'cash_gamma', 'cash_theta', 'option_value']
 
     def __init__(self):
-        self.public_columns = ['sigma','left_days','left_times','sigma_T','stock_index_price']
-        self.greek_columns = ['cash_delta', 'cash_gamma', 'cash_theta', 'option_value']
-        self.option_basket = []
         self.reset()
 
     def reset(self):
+        self.option_basket = []
         self.notional = 0
         self.stock_index_code = None
         self.start_date = None
