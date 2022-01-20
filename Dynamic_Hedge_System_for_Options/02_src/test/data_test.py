@@ -6,7 +6,7 @@
 from classes.backtest.backtest import Backtest
 from datetime import date
 from classes.options.Vanilla import VanillaCall
-from classes.options.OptionBase import OptionBase
+
 from classes.strategy.WW_Hedge import WW_Hedge
 from classes.strategy.Zakamouline import Zakamouline
 # backtest = BacktestFramework()
@@ -41,6 +41,9 @@ df_hedge_zaka = zakamouline.get_hedging_position(greek_df,
                               K=5.42)
 ww_hedge.hedge_visualization(greek_df)
 zakamouline.hedge_visualization(greek_df)
+
+
+
 
 b = Backtest()
 b.run_backtest(ww_hedge.df_hedge.loc[:, ['stock_price', 'position']])
