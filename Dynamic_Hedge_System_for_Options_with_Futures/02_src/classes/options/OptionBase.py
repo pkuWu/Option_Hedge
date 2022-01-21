@@ -19,7 +19,7 @@ class OptionBase:
                             }
 
     def reset_paras(self):
-        self.notional = None
+        self.multiplier = 100
         self.stock_index_code = None
         self.start_date = None
         self.end_date = None
@@ -30,15 +30,14 @@ class OptionBase:
         self.trade_dates = None
         self.look_back_num = 60
     
-    def set_paras(self,notional=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_index_code=None,start_price=None,look_back_num=None):
-        self.set_notional(notional)
+    def set_paras(self,multiplier=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_index_code=None,look_back_num=None):
+        self.set_multiplier(multiplier)
         self.set_start_date(start_date)
         self.set_end_date(end_date)
         self.set_K(K)
         self.set_r(r)
         self.set_option_fee(option_fee)
         self.set_stock_index_code(stock_index_code)
-        self.set_start_price(start_price)
         self.set_look_back_num(look_back_num)
 
     def set_look_back_num(self,look_back_num=None):
@@ -46,22 +45,17 @@ class OptionBase:
             self.look_back_num = look_back_num
 
     def set_paras_by_dict(self,para_dict):
-        self.set_notional(para_dict.get('notional'))
+        self.set_multiplier(para_dict.get('multiplier'))
         self.set_start_date(para_dict.get('start_date'))
         self.set_end_date(para_dict.get('end_date'))
         self.set_K(para_dict.get('K'))
         self.set_r(para_dict.get('r'))
         self.set_option_fee(para_dict.get('option_fee'))
         self.set_stock_index_code(para_dict.get('stock_index_code'))
-        self.set_start_price(para_dict.get('start_price'))
     
-    def set_notional(self,notional=None):
-        if notional is not None:
-            self.notional = notional
-
-    def set_start_price(self,start_price=None):
-        if start_price is not None:
-            self.start_price = start_price
+    def set_multiplier(self,multiplier=None):
+        if multiplier is not None:
+            self.multiplier = multiplier
 
     def set_start_date(self,start_date=None):
         if start_date is not None:
