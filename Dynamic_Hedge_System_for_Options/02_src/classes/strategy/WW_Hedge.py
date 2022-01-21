@@ -9,12 +9,15 @@ from .strategyBase import StrategyBase
 
 
 class WW_Hedge(StrategyBase):
+    df_hedge_columns = ['stock_price', 'H0','delta','up_bound','low_bound']
+    
     def __init__(self):
         super().__init__()
+        self.reset_paras()
 
     def reset_paras(self):
-        self.gamma = None
-        self.Lambda = None
+        self.gamma = 0.5
+        self.Lambda = 0.00005
 
     def set_paras(self,gamma=None,Lambda=None):
         self.set_gamma(gamma)
@@ -31,9 +34,9 @@ class WW_Hedge(StrategyBase):
     def get_hedging_position(self,greek_df,**kwargs):
         # kwargs= {'r':r,'lambda':lambda,'size':size,'gamma':gamma}
         # size = notional/start_price
-        self.set_paras(kwargs['gamma'],kwargs['Lambda'])
+        self.set_paras(kwargs.get('gamma'),kwargs.get('Lambda'))
         greek_df = greek_df.reset_index()
-        self.df_hedge = pd.DataFrame(columns=['stock_price', 'H0','delta','up_bound','low_bound'])
+        self.df_hedge = pd.DataFrame(columns=self.df_hedge_columns)
         self.df_hedge.loc[:, 'stock_price'] = greek_df.loc[:, 'stock_price']
         self.df_hedge.loc[:, 'H0'] = (3/2*np.exp(-kwargs['r']*greek_df.loc[:, 'left_times'])*kwargs['Lambda']*greek_df.loc[:,'stock_price']*greek_df.loc[:,'gamma']**2/kwargs['gamma'])**(1/3)
         self.df_hedge.loc[:, 'delta'] = greek_df.loc[:, 'delta']
