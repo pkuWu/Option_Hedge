@@ -60,7 +60,7 @@ class Option_Contract:
         self.option_info = '期权类型:{0:s}，合约乘数:{1:,.0f}，标的:{2:s}，期权费:{3:,.0f}，执行价:{4:,.2f}'.format(
             self.option_name, self.multiplier, self.stock_index_code, self.option_fee, self.strike_price)
 
-    def get_paras_from_current_option(self,option):
+    def get_paras_from_current_option(self, option):
         self.stock_index_code = option.stock_index_code
         self.start_date = option.start_date
         self.end_date = option.end_date
