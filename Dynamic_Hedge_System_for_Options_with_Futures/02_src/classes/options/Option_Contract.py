@@ -7,14 +7,21 @@ class Option_Contract:
     all_trade_dates = BasicData.ALL_TRADE_DATES
     price_dict = BasicData.PRICE_DICT
     public_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_index_price']
-    greek_columns = ['cash_delta', 'cash_gamma', 'cash_theta', 'option_value']
+    greek_columns = ['delta','gamma','theta', 'vega','cash_delta', 'cash_gamma', 'cash_theta', 'option_value']
+    pnl_columns = ['delta_pnl','gamma_pnl','vega_pnl','theta_pnl','option_pnl','high_order_pnl']
+    option_type = {'VanillaCall': '看涨期权',
+                   'VanillaPut': '看跌期权',
+                   'BullCallSpread': '牛市看涨差价',
+                   'BullPutSpread': '牛市看跌差价',
+                   'BearCallSpread': '熊市看涨差价',
+                   'BearPutSpread': '熊市看跌差价'}
 
     def __init__(self):
         self.reset()
 
     def reset(self):
         self.option_basket = []
-        self.multiplier = 100
+        self.multiplier = None
         self.stock_index_code = None
         self.start_date = None
         self.end_date = None
@@ -25,27 +32,26 @@ class Option_Contract:
         # VanillaCall
         if option_class == 'VanillaCall':
             option_dict = self.add_vanilla_option_by_dict(option_class,option_position,option_paras) # option_dict = {'option_obj': ,'option_pos': }
-            self.get_paras_from_current_option(option_dict['option_obj'])
             self.option_basket.append(option_dict)
-            self.get_vanilla_info()
+            self.get_paras(option_dict['option_obj'])
+            self.get_vanilla_info(option_class)
+        # VanillaPut
         elif option_class == 'VanillaPut':
             option_dict = self.add_vanilla_option_by_dict(option_class,option_position,option_paras)
-            self.get_paras_from_current_option(option_dict['option_obj'])
             self.option_basket.append(option_dict)
-            self.get_vanilla_info()
-        self.init_public_greek_df()
+            self.get_paras(option_dict['option_obj'])
+            self.get_vanilla_info(option_class)
         self.calculate_portfolio_greek_df(self.option_basket)
 
     def add_vanilla_option_by_dict(self,option_class,option_position,option_paras):
         '''
         :param option_paras:
-            multiplier
+            stock_index_code
             start_date
             end_date
             K
             r
             option_fee
-            stock_index_code
         '''
         option_dict = dict().fromkeys(['option_obj','option_pos'])
         option_dict['option_obj'] = eval(option_class)()
@@ -54,13 +60,13 @@ class Option_Contract:
         option_dict['option_obj'].calculate_greeks()
         return option_dict
 
-    def get_vanilla_info(self):
-        self.option_name = str(type(self.option_basket[0]['option_obj'])).strip("'>").split('.')[-1]
+    def get_vanilla_info(self,option_class):
+        self.option_name = self.option_type[option_class]
         self.strike_price = self.option_basket[0]['option_obj'].K
         self.option_info = '期权类型:{0:s}，合约乘数:{1:,.0f}，标的:{2:s}，期权费:{3:,.0f}，执行价:{4:,.2f}'.format(
             self.option_name, self.multiplier, self.stock_index_code, self.option_fee, self.strike_price)
 
-    def get_paras_from_current_option(self, option):
+    def get_paras(self, option):
         self.stock_index_code = option.stock_index_code
         self.start_date = option.start_date
         self.end_date = option.end_date
@@ -74,8 +80,24 @@ class Option_Contract:
         self.greek_df = pd.DataFrame(0, index=self.trade_dates, columns=self.greek_columns)
 
     def calculate_portfolio_greek_df(self,option_basket):
+        self.init_public_greek_df()
         for option_dict in option_basket:
-            self.greek_df.loc[:, :] += (option_dict['option_pos']) * option_dict['option_obj'].greek_df.loc[:,['cash_delta', 'cash_gamma', 'cash_theta','option_value']]
+            self.greek_df.loc[:, :] += (option_dict['option_pos']) * option_dict['option_obj'].greek_df.loc[:, ['delta','gamma','theta', 'vega','cash_delta', 'cash_gamma', 'cash_theta', 'option_value']]
 
     def get_greek_df(self):
         return self.greek_df
+
+    def init_public_pnl_df(self):
+        self.pnl_df = pd.DataFrame(0, index=self.trade_dates, columns=self.pnl_columns)
+
+    def calculate_portfolio_pnl_df(self):
+        self.init_public_pnl_df()
+        self.pnl_df.loc[:, 'delta_pnl'] = self.greek_df.loc[:, 'delta']*self.public_df.loc[:, 'stock_index_price'].diff().fillna(0)*self.multiplier
+        self.pnl_df.loc[:, 'gamma_pnl'] = 0.5*self.greek_df.loc[:, 'gamma'] * self.public_df.loc[:, 'stock_index_price'].diff().fillna(0)**2*self.multiplier
+        self.pnl_df.loc[:, 'vega_pnl'] = self.greek_df.loc[:, 'vega']*self.public_df.loc[:, 'sigma'].diff().fillna(0)*self.multiplier
+        self.pnl_df.loc[:, 'theta_pnl'] = self.greek_df.loc[:, 'theta']*self.public_df.loc[:, 'left_times'].diff().fillna(0)*self.multiplier
+        self.pnl_df.loc[:, 'option_pnl'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
+        self.pnl_df.loc[:, 'high_order_pnl'] = self.pnl_df.loc[:, 'option_pnl']-self.pnl_df.loc[:, 'delta_pnl']-self.pnl_df.loc[:, 'gamma_pnl']-self.pnl_df.loc[:, 'vega_pnl']-self.pnl_df.loc[:, 'theta_pnl']
+
+    def get_pnl_df(self):
+        return self.pnl_df

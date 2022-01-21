@@ -9,18 +9,20 @@ class OptionBase:
 #%% 初始化
     all_trade_dates = BasicData.ALL_TRADE_DATES
     price_dict = BasicData.PRICE_DICT
+    MULTIPLIER = {'000300.SH': 300,
+                  '000016.SH': 300,
+                  '000905.SH': 200,
+                  '000906.SH': 100,
+                  '000852.SH': 100}
+    greek_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_index_price', 'd1', 'nd1', 'Nd1', 'Nd2', 'option_price', 'delta', 'gamma', 'theta','vega', 'cash_delta', 'cash_gamma', 'cash_theta', 'option_value']
+    option_type = {'vanilla': ['call', 'put']} # 待加入：障碍、美式、etc
 
     def __init__(self):
         self.reset_paras()
-        self.greek_columns = ['sigma','left_days','left_times','sigma_T','stock_index_price','d1', 'nd1', 'Nd1', 'Nd2',
-                              'option_price','delta','gamma','theta','cash_delta','cash_gamma','cash_theta','vega','option_value']
-        self.option_type = {'vanilla':['call','put'],
-                            #待加入：障碍、美式、etc
-                            }
 
     def reset_paras(self):
-        self.multiplier = 100
         self.stock_index_code = None
+        self.multiplier = None
         self.start_date = None
         self.end_date = None
         self.look_back_date = None
@@ -30,14 +32,14 @@ class OptionBase:
         self.trade_dates = None
         self.look_back_num = 60
     
-    def set_paras(self,multiplier=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,stock_index_code=None,look_back_num=None):
-        self.set_multiplier(multiplier)
+    def set_paras(self,stock_index_code=None,start_date=None,end_date=None,K=None,r=None,option_fee=None,look_back_num=None):
+        self.set_stock_index_code(stock_index_code)
+        self.get_multiplier(stock_index_code)
         self.set_start_date(start_date)
         self.set_end_date(end_date)
         self.set_K(K)
         self.set_r(r)
         self.set_option_fee(option_fee)
-        self.set_stock_index_code(stock_index_code)
         self.set_look_back_num(look_back_num)
 
     def set_look_back_num(self,look_back_num=None):
@@ -45,17 +47,17 @@ class OptionBase:
             self.look_back_num = look_back_num
 
     def set_paras_by_dict(self,para_dict):
-        self.set_multiplier(para_dict.get('multiplier'))
+        self.set_stock_index_code(para_dict.get('stock_index_code'))
+        self.get_multiplier(para_dict.get('stock_index_code'))
         self.set_start_date(para_dict.get('start_date'))
         self.set_end_date(para_dict.get('end_date'))
         self.set_K(para_dict.get('K'))
         self.set_r(para_dict.get('r'))
         self.set_option_fee(para_dict.get('option_fee'))
-        self.set_stock_index_code(para_dict.get('stock_index_code'))
     
-    def set_multiplier(self,multiplier=None):
-        if multiplier is not None:
-            self.multiplier = multiplier
+    def get_multiplier(self,stock_index_code = None):
+        if stock_index_code is not None:
+            self.multiplier = self.MULTIPLIER[stock_index_code]
 
     def set_start_date(self,start_date=None):
         if start_date is not None:
