@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class StrategyBase:
     def __init__(self):
-        pass
+        self.MULTIPLIER = 100
 
     def hedge_visualization(self, greek_df):
         df_plot = self.df_hedge.loc[:, ['delta', 'position_rate', 'low_bound', 'up_bound']]

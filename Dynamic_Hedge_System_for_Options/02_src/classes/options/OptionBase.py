@@ -170,10 +170,11 @@ class OptionBase:
         self.greek_df.loc[:,'theta_value'] = self.greek_df.loc[:,'theta']/252*self.stock_num
         self.greek_df.loc[self.greek_df.index[0],'theta_value'] = 0
         self.greek_df.loc[:,'vega_value'] = self.greek_df.loc[:,'vega']*self.greek_df.loc[:,'sigma'].diff().fillna(0)*self.stock_num
-
+        self.greek_df.loc[:,'high_order_value'] = self.greek_df.loc[:,'option_value_change']-self.greek_df.loc[:,'delta_value']-self.greek_df.loc[:,'gamma_value']-self.greek_df.loc[:,'theta_value']-self.greek_df.loc[:,'vega_value']
+     ##### 添加余项，修改greek_df
     def calculate_decomposition(self):
         self.calculate_greeks()
         self.calculate_return_decomposition()
 
-    def return_result(self):
+    def get_greek_df(self):
         return self.greek_df

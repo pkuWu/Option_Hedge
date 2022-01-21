@@ -1,7 +1,13 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+# @Time    : 2022/1/21 23:19
+# @Author  : Hao Wu
+# @File    : .py
+
 from classes.options.option_portfolio import Option_Portfolio
 
 # test for Option_Portfolio
-spread_paras = {'portfolio_class':'BearCallSpread',
+Spread_paras = {'portfolio_class':'BullCallSpread',
              'notional':12e6,
              'start_date':'20190129',
              'end_date':'20191231',
@@ -12,10 +18,9 @@ spread_paras = {'portfolio_class':'BearCallSpread',
              }
 
 option_portfolio = Option_Portfolio()
-option_portfolio.create_portfolio_dict(**spread_paras)
+option_portfolio.create_portfolio_dict(**Spread_paras)
 option_portfolio.calculate_portfolio_greeks()
 portfolio_greeks=option_portfolio.get_portfolio_df_greek()
-print(portfolio_greeks)
 
 # butterFly_paras = {'portfolio_class':'ButterflySpread',
 #              'notional':12e6,
