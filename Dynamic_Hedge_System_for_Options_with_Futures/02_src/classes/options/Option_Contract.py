@@ -174,7 +174,7 @@ class Option_Contract:
         plt.plot(self.trade_dates, self.pnl_df.loc[:, 'theta_pnl'].cumsum(), label = 'theta_pnl')
         plt.plot(self.trade_dates, self.pnl_df.loc[:, 'option_pnl'].cumsum(), label = 'option_pnl')
         plt.plot(self.trade_dates, self.pnl_df.loc[:, 'high_order_pnl'].cumsum(), label = 'high_order_pnl')
-        if self.option_class == 'VanillaCall' or self.option_class == 'VanillaPut':
+        if self.option_class in ['VanillaCall', 'VanillaPut']:
             plt.title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，执行价:{3:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price))
         elif self.option_class == 'BullCallSpread' or self.option_class == 'BullPutSpread' or self.option_class == 'BearCallSpread' or self.option_class == 'BearPutSpread':
             plt.title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，低执行价:{3:,.2f}，高执行价:{4:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_high), fontsize = 8)
