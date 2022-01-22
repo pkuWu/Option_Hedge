@@ -15,7 +15,13 @@ class Option_Contract:
                    'BullCallSpread': '牛市看涨差价',
                    'BullPutSpread': '牛市看跌差价',
                    'BearCallSpread': '熊市看涨差价',
-                   'BearPutSpread': '熊市看跌差价'}
+                   'BearPutSpread': '熊市看跌差价',
+                   'BoxSpread': '盒式差价',
+                   'RatioCallSpread': '看涨比率差价',
+                   'Straddle': '跨式组合',
+                   'Strangle': '宽跨式组合',
+                   'ButterflyCallSpread': '蝶式看涨差价',
+                   'ButterflyPutSpread': '蝶式看跌差价'}
 
     def __init__(self):
         self.reset()
@@ -70,7 +76,49 @@ class Option_Contract:
             self.option_basket.append(option_dict2)
             self.get_paras(option_dict1['option_obj'])
             self.get_spread_info(option_class)
+        # BoxSpread
+        elif option_class =='BoxSpread':
+            option_dict1, option_dict2 = self.add_spread_option_by_dict('BullCallSpread', option_position,option_paras)
+            option_dict3, option_dict4 = self.add_spread_option_by_dict('BearPutSpread', option_position,option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.option_basket.append(option_dict3)
+            self.option_basket.append(option_dict4)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_spread_info(option_class)
+        # Straddle
+        elif option_class =='Straddle':
+            option_dict1 = self.add_vanilla_option_by_dict('VanillaCall',option_position,option_paras)
+            option_dict2 = self.add_vanilla_option_by_dict('VanillaPut',option_position,option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_vanilla_info(option_class)
+        # Strangle
+        elif option_class == 'Strangle':
+            option_dict1, option_dict2 = self.add_strangle_option_by_dict(option_class, option_position,option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_spread_info(option_class)
+        # ButterflyCallSpread
+        elif option_class == 'ButterflyCallSpread':
+            option_dict1, option_dict2, option_dict3 = self.add_butterfly_option_by_dict(option_class, option_position,option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_butterfly_info(option_class)
+        # ButterflyPutSpread
+        elif option_class == 'ButterflyPutSpread':
+            option_dict1, option_dict2, option_dict3 = self.add_butterfly_option_by_dict(option_class, option_position,option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_butterfly_info(option_class)
         self.calculate_portfolio_greek_df(self.option_basket)
+        return self
 
     def add_vanilla_option_by_dict(self,option_class,option_position,option_paras):
         '''
@@ -116,6 +164,52 @@ class Option_Contract:
             option_dict2 = self.add_vanilla_option_by_dict('VanillaPut', option_position, option_para_dict2)
         return option_dict1, option_dict2
 
+    def add_strangle_option_by_dict(self, option_class, option_position, option_paras):
+        option_para_dict1 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date'],
+                             'K': option_paras['K_low'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        option_para_dict2 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date'],
+                             'K': option_paras['K_high'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        option_dict1 = self.add_vanilla_option_by_dict('VanillaPut', option_position, option_para_dict1)
+        option_dict2 = self.add_vanilla_option_by_dict('VanillaCall', option_position, option_para_dict2)
+        return option_dict1, option_dict2
+
+    def add_butterfly_option_by_dict(self, option_class, option_position, option_paras):
+        option_para_dict1 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date'],
+                             'K': option_paras['K_low'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        option_para_dict2 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date'],
+                             'K': option_paras['K_mid'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        option_para_dict3 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date'],
+                             'K': option_paras['K_high'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        if option_class == 'ButterflyCallSpread':
+            option_dict1 = self.add_vanilla_option_by_dict('VanillaCall', option_position, option_para_dict1)
+            option_dict2 = self.add_vanilla_option_by_dict('VanillaCall', option_position * (-2), option_para_dict2)
+            option_dict3 = self.add_vanilla_option_by_dict('VanillaCall', option_position, option_para_dict3)
+        elif option_class == 'ButterflyPutSpread':
+            option_dict1 = self.add_vanilla_option_by_dict('VanillaPut', option_position, option_para_dict1)
+            option_dict2 = self.add_vanilla_option_by_dict('VanillaPut', option_position * (-2), option_para_dict2)
+            option_dict3 = self.add_vanilla_option_by_dict('VanillaPut', option_position, option_para_dict3)
+        return option_dict1, option_dict2, option_dict3
+
     def get_vanilla_info(self,option_class):
         self.option_class = option_class
         self.option_name = self.option_type[option_class]
@@ -130,6 +224,15 @@ class Option_Contract:
         self.strike_price_high = self.option_basket[1]['option_obj'].K
         self.option_info = '期权类型:{0:s}，合约乘数:{1:,.0f}，标的:{2:s}，期权费:{3:,.0f}，低执行价:{4:,.2f}，高执行价:{5:,.2f}'.format(
             self.option_name, self.multiplier, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_high)
+
+    def get_butterfly_info(self, option_class):
+        self.option_class = option_class
+        self.option_name = self.option_type[option_class]
+        self.strike_price_low = self.option_basket[0]['option_obj'].K
+        self.strike_price_mid = self.option_basket[1]['option_obj'].K
+        self.strike_price_high = self.option_basket[2]['option_obj'].K
+        self.option_info = '期权类型:{0:s}，合约乘数:{1:,.0f}，标的:{2:s}，期权费:{3:,.0f}，K1:{4:,.2f}，K2:{5:,.2f},K3:{6:,.2f}'.format(
+            self.option_name, self.multiplier, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_mid, self.strike_price_high)
 
     def get_paras(self, option):
         self.stock_index_code = option.stock_index_code
@@ -168,15 +271,24 @@ class Option_Contract:
         return self.pnl_df
 
     def visualize_pnl(self):
-        plt.plot(self.trade_dates, self.pnl_df.loc[:, 'delta_pnl'].cumsum(), label = 'delta_pnl')
-        plt.plot(self.trade_dates, self.pnl_df.loc[:, 'gamma_pnl'].cumsum(), label = 'gamma_pnl')
-        plt.plot(self.trade_dates, self.pnl_df.loc[:, 'vega_pnl'].cumsum(), label = 'vega_pnl')
-        plt.plot(self.trade_dates, self.pnl_df.loc[:, 'theta_pnl'].cumsum(), label = 'theta_pnl')
-        plt.plot(self.trade_dates, self.pnl_df.loc[:, 'option_pnl'].cumsum(), label = 'option_pnl')
-        plt.plot(self.trade_dates, self.pnl_df.loc[:, 'high_order_pnl'].cumsum(), label = 'high_order_pnl')
-        if self.option_class == 'VanillaCall' or self.option_class == 'VanillaPut':
-            plt.title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，执行价:{3:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price))
-        elif self.option_class == 'BullCallSpread' or self.option_class == 'BullPutSpread' or self.option_class == 'BearCallSpread' or self.option_class == 'BearPutSpread':
-            plt.title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，低执行价:{3:,.2f}，高执行价:{4:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_high), fontsize = 8)
-        plt.legend()
-        plt.savefig('../03_img/{0:s}收益分解.jpg'.format(self.option_name), dpi = 300)
+        fig, ax = self.init_canvas()
+        ax.plot(self.trade_dates, self.pnl_df.loc[:, 'delta_pnl'].cumsum(), label = 'delta_pnl')
+        ax.plot(self.trade_dates, self.pnl_df.loc[:, 'gamma_pnl'].cumsum(), label = 'gamma_pnl')
+        ax.plot(self.trade_dates, self.pnl_df.loc[:, 'vega_pnl'].cumsum(), label = 'vega_pnl')
+        ax.plot(self.trade_dates, self.pnl_df.loc[:, 'theta_pnl'].cumsum(), label = 'theta_pnl')
+        ax.plot(self.trade_dates, self.pnl_df.loc[:, 'option_pnl'].cumsum(), label = 'option_pnl')
+        ax.plot(self.trade_dates, self.pnl_df.loc[:, 'high_order_pnl'].cumsum(), label = 'high_order_pnl')
+        if self.option_class in ['VanillaCall', 'VanillaPut', 'Straddle']:
+            ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，执行价:{3:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price), fontsize = 10)
+        elif self.option_class in ['BullCallSpread', 'BullPutSpread', 'BearCallSpread', 'BearPutSpread', 'BoxSpread', 'Strangle']:
+            ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，低执行价:{3:,.2f}，高执行价:{4:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_high), fontsize = 10)
+        elif self.option_class in ['ButterflyCallSpread', 'ButterflyPutSpread']:
+            ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，K1:{3:,.2f}，K2:{4:,.2f}，K3:{5:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_mid, self.strike_price_high), fontsize = 10)
+        ax.legend()
+        fig.savefig('../03_img/{0:s}收益分解.jpg'.format(self.option_name))
+
+    @staticmethod
+    def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):
+        fig = plt.figure(figsize=(10, 5.7), dpi=300)
+        ax = fig.add_axes(rect=rect)
+        return fig, ax
