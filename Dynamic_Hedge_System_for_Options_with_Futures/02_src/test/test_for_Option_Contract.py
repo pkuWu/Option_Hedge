@@ -42,3 +42,17 @@ greeks_butterfly_call = butterfly_call.get_greek_df() # 返回期权组合的希
 butterfly_call.calculate_portfolio_pnl_df() # 计算收益分解
 pnl_butterfly_call = butterfly_call.get_pnl_df() # 返回收益分解
 butterfly_call.visualize_pnl() # 收益分解可视化，存储在03_img
+
+#日历差价
+calendar_call = Option_Contract().create_option_portfolio(option_class='CalendarCallSpread',option_position=1, stock_index_code='000300.SH', start_date=date(2019,1,2),end_date_before=date(2019,3,29), end_date_after=date(2019,6,28), K=3300, r=0.04,option_fee=1780800) # 实例化且传入参数
+greeks_calendar_call = calendar_call.get_greek_df() # 返回期权组合的希腊值，DataFrame格式
+calendar_call.calculate_portfolio_pnl_df() # 计算收益分解
+pnl_calendar_call = calendar_call.get_pnl_df() # 返回收益分解
+calendar_call.visualize_pnl() # 收益分解可视化，存储在03_img
+
+#看涨比率差价多头（Option_Contract里写的是空头，这里position传负数即可）
+ratio_call = Option_Contract().create_option_portfolio(option_class='RatioCallSpread',option_position=(-10), stock_index_code='000300.SH', start_date=date(2019,1,2),end_date=date(2019,3,29), K_low=3000, K_high=3300, r=0.04,option_fee=1780800) # 实例化且传入参数
+greeks_ratio_call = ratio_call.get_greek_df() # 返回期权组合的希腊值，DataFrame格式
+ratio_call.calculate_portfolio_pnl_df() # 计算收益分解
+pnl_ratio_call = ratio_call.get_pnl_df() # 返回收益分解
+ratio_call.visualize_pnl() # 收益分解可视化，存储在03_img

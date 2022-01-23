@@ -17,11 +17,14 @@ class Option_Contract:
                    'BearCallSpread': '熊市看涨差价',
                    'BearPutSpread': '熊市看跌差价',
                    'BoxSpread': '盒式差价',
-                   'RatioCallSpread': '看涨比率差价',
                    'Straddle': '跨式组合',
                    'Strangle': '宽跨式组合',
                    'ButterflyCallSpread': '蝶式看涨差价',
-                   'ButterflyPutSpread': '蝶式看跌差价'}
+                   'ButterflyPutSpread': '蝶式看跌差价',
+                   'CalendarCallSpread': '看涨期权构造的日历差价',
+                   'CalendarPutSpread': '看跌期权构造的日历差价',
+                   'RatioCallSpread': '看涨比率差价',# 这里是看涨比率差价空头、看跌比率差价空头
+                   'RatioPutSpread': '看跌比率差价'}
 
     def __init__(self):
         self.reset()
@@ -87,7 +90,7 @@ class Option_Contract:
             self.get_paras(option_dict1['option_obj'])
             self.get_spread_info(option_class)
         # Straddle
-        elif option_class =='Straddle':
+        elif option_class == 'Straddle':
             option_dict1 = self.add_vanilla_option_by_dict('VanillaCall',option_position,option_paras)
             option_dict2 = self.add_vanilla_option_by_dict('VanillaPut',option_position,option_paras)
             self.option_basket.append(option_dict1)
@@ -117,6 +120,34 @@ class Option_Contract:
             self.option_basket.append(option_dict2)
             self.get_paras(option_dict1['option_obj'])
             self.get_butterfly_info(option_class)
+        # CalendarCallSpread
+        elif option_class == 'CalendarCallSpread':
+            option_dict1, option_dict2 = self.add_calendar_option_by_dict(option_class, option_position,option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_calendar_info(option_class)
+        # CalendarPutSpread
+        elif option_class == 'CalendarPutSpread':
+            option_dict1, option_dict2 = self.add_calendar_option_by_dict(option_class, option_position,option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_calendar_info(option_class)
+        # RatioCallSpread
+        elif option_class == 'RatioCallSpread':
+            option_dict1, option_dict2 = self.add_ratio_option_by_dict(option_class, option_position, option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_spread_info(option_class)
+        # RatioPutSpread
+        elif option_class == 'RatioPutSpread':
+            option_dict1, option_dict2 = self.add_ratio_option_by_dict(option_class, option_position, option_paras)
+            self.option_basket.append(option_dict1)
+            self.option_basket.append(option_dict2)
+            self.get_paras(option_dict1['option_obj'])
+            self.get_spread_info(option_class)
         self.calculate_portfolio_greek_df(self.option_basket)
         return self
 
@@ -210,6 +241,66 @@ class Option_Contract:
             option_dict3 = self.add_vanilla_option_by_dict('VanillaPut', option_position, option_para_dict3)
         return option_dict1, option_dict2, option_dict3
 
+    def add_calendar_option_by_dict(self, option_class, option_position, option_paras):
+        option_para_dict1 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date_before'],
+                             'K': option_paras['K'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        option_para_dict2 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date_after'],
+                             'K': option_paras['K'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        if option_class == 'CalendarCallSpread':
+            option_dict1 = self.add_vanilla_option_by_dict('VanillaCall', option_position * (-1), option_para_dict1)
+            option_dict2 = self.add_vanilla_option_by_dict('VanillaCall', option_position, option_para_dict2)
+        elif option_class == 'CalendarPutSpread':
+            option_dict1 = self.add_vanilla_option_by_dict('VanillaPut', option_position * (-1), option_para_dict1)
+            option_dict2 = self.add_vanilla_option_by_dict('VanillaPut', option_position, option_para_dict2)
+        return option_dict1, option_dict2
+
+    def add_ratio_option_by_dict(self, option_class, option_position, option_paras):
+        option_para_dict1 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date'],
+                             'K': option_paras['K_low'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        option_para_dict2 = {'stock_index_code': option_paras['stock_index_code'],
+                             'start_date': option_paras['start_date'],
+                             'end_date': option_paras['end_date'],
+                             'K': option_paras['K_high'],
+                             'r': option_paras['r'],
+                             'option_fee': option_paras['option_fee']}
+        factor1, factor2 = self.calculate_position_factor(option_class, option_para_dict1, option_para_dict2)
+        if option_class == 'RatioCallSpread':
+            option_dict1 = self.add_vanilla_option_by_dict('VanillaCall', option_position * factor1, option_para_dict1)
+            option_dict2 = self.add_vanilla_option_by_dict('VanillaCall', option_position * factor2 * (-1), option_para_dict2)
+        elif option_class == 'RatioPutSpread':
+            option_dict1 = self.add_vanilla_option_by_dict('VanillaPut', option_position * factor1 * (-1), option_para_dict1)
+            option_dict2 = self.add_vanilla_option_by_dict('VanillaPut', option_position * factor2, option_para_dict2)
+        return option_dict1, option_dict2
+
+    def calculate_position_factor(self, option_class, option_para_dict1, option_para_dict2):
+        if option_class == 'RatioCallSpread':
+            vanilla1 = VanillaCall()
+            vanilla2 = VanillaCall()
+        elif option_class == 'RatioPutSpread':
+            vanilla1 = VanillaPut()
+            vanilla2 = VanillaPut()
+        vanilla1.set_paras_by_dict(option_para_dict1)
+        vanilla2.set_paras_by_dict(option_para_dict2)
+        vanilla1.calculate_greeks()
+        vanilla2.calculate_greeks()
+        delta1 = vanilla1.greek_df.loc[vanilla1.trade_dates[0], 'delta']
+        delta2 = vanilla2.greek_df.loc[vanilla2.trade_dates[0], 'delta']
+        factor1 = round(abs(delta2) / (abs(delta1) + abs(delta2)), 2)
+        factor2 = round(abs(delta1) / (abs(delta1) + abs(delta2)), 2)
+        return factor1, factor2
+
     def get_vanilla_info(self,option_class):
         self.option_class = option_class
         self.option_name = self.option_type[option_class]
@@ -233,6 +324,14 @@ class Option_Contract:
         self.strike_price_high = self.option_basket[2]['option_obj'].K
         self.option_info = '期权类型:{0:s}，合约乘数:{1:,.0f}，标的:{2:s}，期权费:{3:,.0f}，K1:{4:,.2f}，K2:{5:,.2f},K3:{6:,.2f}'.format(
             self.option_name, self.multiplier, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_mid, self.strike_price_high)
+
+    def get_calendar_info(self, option_class):
+        self.option_class = option_class
+        self.option_name = self.option_type[option_class]
+        self.strike_price = self.option_basket[0]['option_obj'].K
+        self.end_date_after = self.option_basket[1]['option_obj'].end_date
+        self.option_info = '期权类型:{0:s}，合约乘数:{1:,.0f}，标的:{2:s}，期权费:{3:,.0f}，K:{4:,.2f}，到期日1:{5:s},到期日2:{6:s}'.format(
+            self.option_name, self.multiplier, self.stock_index_code, self.option_fee, self.strike_price, str(self.end_date), str(self.end_date_after))
 
     def get_paras(self, option):
         self.stock_index_code = option.stock_index_code
@@ -280,10 +379,12 @@ class Option_Contract:
         ax.plot(self.trade_dates, self.pnl_df.loc[:, 'high_order_pnl'].cumsum(), label = 'high_order_pnl')
         if self.option_class in ['VanillaCall', 'VanillaPut', 'Straddle']:
             ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，执行价:{3:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price), fontsize = 10)
-        elif self.option_class in ['BullCallSpread', 'BullPutSpread', 'BearCallSpread', 'BearPutSpread', 'BoxSpread', 'Strangle']:
+        elif self.option_class in ['BullCallSpread', 'BullPutSpread', 'BearCallSpread', 'BearPutSpread', 'BoxSpread', 'Strangle', 'RatioCallSpread', 'RatioPutSpread']:
             ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，低执行价:{3:,.2f}，高执行价:{4:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_high), fontsize = 10)
         elif self.option_class in ['ButterflyCallSpread', 'ButterflyPutSpread']:
             ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，K1:{3:,.2f}，K2:{4:,.2f}，K3:{5:,.2f}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price_low, self.strike_price_mid, self.strike_price_high), fontsize = 10)
+        elif self.option_class in ['CalendarCallSpread', 'CalendarPutSpread']:
+            ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，K:{3:,.2f}，到期日1:{4:s},到期日2:{5:s}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price, str(self.end_date), str(self.end_date_after)), fontsize = 10)
         ax.legend()
         fig.savefig('../03_img/{0:s}收益分解.jpg'.format(self.option_name))
 
