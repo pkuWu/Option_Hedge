@@ -9,5 +9,13 @@ class BasicData:
     PRICE_DICT['open'] = basic_data['open']
     PRICE_DICT['close'] = basic_data['close']
 
+    with open('./data/python_data/future_data.pickle', 'rb') as file:
+        future_data = pickle.load(file)
+
+    FUTURE = list(future_data.keys())
+    IF_DATA = future_data['IF']
+    IH_DATA = future_data['IH']
+    IC_DATA = future_data['IC']
+
     def __new__(cls):
         return cls
