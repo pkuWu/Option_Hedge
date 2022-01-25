@@ -1,6 +1,6 @@
 import pandas as pd
 from abc import abstractmethod
-from ..basicData.basicData import BasicData
+from classes.basicData.basicData import BasicData
 from classes.options.Option_Contract import Option_Contract
 
 
@@ -20,6 +20,7 @@ class StrategyBase:
         self.multiplier = None
         self.future_data = None
         self.clear_future_weight_dict()
+        self.target_delta = None
 
     def clear_future_weight_dict(self):
         self.future_weight_dict['code_list'] = None
@@ -61,12 +62,13 @@ class StrategyBase:
         self.future_weight_dict['weight_info'] = pd.DataFrame(0,index=self.trade_dates, columns=self.future_data['open'].columns)
 
     @abstractmethod
-    def get_hedging_position(self,greek_df,stock_price):
+    def get_hedging_position(self,greek_df,stock_index_price):
         pass
 
     @abstractmethod
     def calculate_target_delta(self):
         pass
+
 
     @abstractmethod
     def calculate_future_weight(self):
