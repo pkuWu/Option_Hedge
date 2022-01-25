@@ -12,7 +12,6 @@ class StrategyBase:
     future_weight_dict = dict().fromkeys(['code_list', 'weight_info'])
 
     def __init__(self):
-        self.target_delta = None # 需要对冲的delta（Hedge_ALL，Hedge_Half, WW，ZM算出来的）
         self.reset()
 
     def reset(self):
@@ -77,3 +76,7 @@ class StrategyBase:
     def get_future_weight(self):
         self.calculate_future_weight()
         return self.future_weight_dict['weight_info']
+
+    def get_target_delta(self):
+        self.calculate_target_delta()
+        return self.target_delta
