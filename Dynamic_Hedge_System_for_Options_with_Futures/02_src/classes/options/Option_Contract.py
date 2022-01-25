@@ -38,7 +38,8 @@ class Option_Contract:
         self.option_fee = 0
         self.trade_dates = None
 
-    def create_option_portfolio(self,option_class,option_position,**option_paras):
+    # def create_option_portfolio(self,option_class,option_position,**option_paras):
+    def create_option_portfolio(self, option_class, option_position, option_paras):
         # VanillaCall
         if option_class == 'VanillaCall':
             option_dict = self.add_vanilla_option_by_dict(option_class,option_position,option_paras) # option_dict = {'option_obj': ,'option_pos': }

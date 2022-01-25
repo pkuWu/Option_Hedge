@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from abc import abstractmethod
 from classes.basicData.basicData import BasicData
 from classes.options.Option_Contract import Option_Contract
@@ -19,6 +20,7 @@ class StrategyBase:
         self.multiplier = None
         self.future_data = None
         self.clear_future_weight_dict()
+        self.future_delta = None
         self.target_delta = None
 
     def clear_future_weight_dict(self):
@@ -46,7 +48,11 @@ class StrategyBase:
         self.future_data = BasicData.FUTURE_DATA[self.future]
 
     def calculate_future_delta(self):
-        pass
+        self.future_delta = self.future_data['close'].loc[self.trade_dates] * self.multiplier
+
+    def get_future_delta(self):
+        self.calculate_future_delta()
+        return self.future_delta
 
     def get_option_info(self, option): #传入的Option_Contract对象
         self.set_paras(option.stock_index_code)
