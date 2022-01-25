@@ -22,7 +22,6 @@ class StrategyBase:
         self.clear_future_weight_dict()
 
     def clear_future_weight_dict(self):
-        self.future_weight_dict['trade_dates'] = None
         self.future_weight_dict['code_list'] = None
         self.future_weight_dict['weight_info'] = None
 
