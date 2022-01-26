@@ -45,6 +45,9 @@ class Strangle(OptionPortfolio):
         self.options.append({'option_object': option2, 'option_position': 1})
 
 
+    def temp(self):
+        pass
+
 
 
 
