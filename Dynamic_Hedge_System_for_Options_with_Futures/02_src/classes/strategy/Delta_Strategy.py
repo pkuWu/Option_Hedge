@@ -25,7 +25,7 @@ class WW_Hedge(StrategyBase):
         super().__init__()
         self.risk_averse = risk_averse
         self.lambda_ = lambda_
-        self.WW_Hedge_df = pd.DataFrame(columns=['H0','delta','delta_upper_bound','delta_lower_bound'])
+        self.WW_Hedge_df = pd.DataFrame(columns=['H0','delta','delta_upper_bound','delta_lower_bound','target_delta'])
 
     def calculate_target_delta_interval(self):
         portfolio_greek_df = self.option_greek_df
@@ -43,7 +43,22 @@ class WW_Hedge(StrategyBase):
         self.WW_Hedge_df['delta'] = portfolio_greek_df['delta']
         self.WW_Hedge_df['delta_upper_bound'] = self.WW_Hedge_df['delta']+self.WW_Hedge_df['H0']
         self.WW_Hedge_df['delta_lower_bound'] = self.WW_Hedge_df['delta']-self.WW_Hedge_df['H0']
+        self.WW_Hedge_df['cash_delta_up'] =self.WW_Hedge_df['delta_upper_bound'] * self.multiplier * public_df['stock_index_price']
+        self.WW_Hedge_df['cash_delta_low'] = self.WW_Hedge_df['delta_lower_bound'] * self.multiplier * public_df['stock_index_price']
         return self.WW_Hedge_df
+
+    def calculate_target_delta(self):
+        WW_Hedge_df = self.calculate_target_delta_interval()
+        WW_Hedge_df['target_delta'].fillna(0)
+        for i in range(len(WW_Hedge_df)):
+            if self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta'] > WW_Hedge_df.loc[WW_Hedge_df.index[i],'cash_delta_up'] * self.portfolio_position:
+                WW_Hedge_df.loc[WW_Hedge_df.index[i],'target_delta'] = WW_Hedge_df.loc[WW_Hedge_df.index[i],'cash_delta_up'] * \
+                                                                           self.portfolio_position - self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta']
+            elif self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta'] < WW_Hedge_df.loc[WW_Hedge_df.index[i],'cash_delta_low'] * self.portfolio_position:
+                WW_Hedge_df.loc[WW_Hedge_df.index[i],'target_delta'] = WW_Hedge_df.loc[WW_Hedge_df.index[i],'cash_delta_low'] * \
+                                                                           self.portfolio_position - self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta']
+                #target delta为正数，意味着期权组合的delta比对冲带下限更小，需要增加delta；target delta为负数，意味着期权组合的delta超过对冲带上限，需要减少delta
+        return WW_Hedge_df['target_delta']
 
 # Zakamouline method
 class Zakamouline(StrategyBase):
@@ -100,10 +115,12 @@ class Zakamouline(StrategyBase):
     def calculate_target_delta(self):
         Zaka_Hedge_df = self.calculate_target_delta_interval()
         for i in range(len(Zaka_Hedge_df)):
-            if self.option_greek_df.loc[i,'delta'] > Zaka_Hedge_df.loc[i,'cash_delta_up'] * self.portfolio_position:
-                Zaka_Hedge_df.loc[i,'target_delta'] = Zaka_Hedge_df.loc[i,'cash_delta_up'] * self.portfolio_position - self.option_greek_df.loc[i,'delta']
-            elif self.option_greek_df.loc[i,'delta'] < Zaka_Hedge_df.loc[i,'cash_delta_low'] * self.portfolio_position:
-                Zaka_Hedge_df.loc[i,'target_delta'] = Zaka_Hedge_df.loc[i,'cash_delta_low'] * self.portfolio_position - self.option_greek_df.loc[i,'delta']
+            if self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta'] > Zaka_Hedge_df.loc[Zaka_Hedge_df.index[i],'cash_delta_up'] * self.portfolio_position:
+                Zaka_Hedge_df.loc[Zaka_Hedge_df.index[i],'target_delta'] = Zaka_Hedge_df.loc[Zaka_Hedge_df.index[i],'cash_delta_up'] * \
+                                                                           self.portfolio_position - self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta']
+            elif self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta'] < Zaka_Hedge_df.loc[Zaka_Hedge_df.index[i],'cash_delta_low'] * self.portfolio_position:
+                Zaka_Hedge_df.loc[Zaka_Hedge_df.index[i],'target_delta'] = Zaka_Hedge_df.loc[Zaka_Hedge_df.index[i],'cash_delta_low'] * \
+                                                                           self.portfolio_position - self.option_greek_df.loc[self.option_greek_df.index[i],'cash_delta']
                 #target delta为正数，意味着期权组合的delta比对冲带下限更小，需要增加delta；target delta为负数，意味着期权组合的delta超过对冲带上限，需要减少delta
         return Zaka_Hedge_df['target_delta']
 

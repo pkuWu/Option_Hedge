@@ -9,12 +9,13 @@ option = Option_Contract().create_option_portfolio(option_class='VanillaCall', o
 
 
 #ZAKA
-zakahedge = Zakamouline().get_option_info(option)
-zaka_hedge_df = zakahedge.calculate_target_delta_interval()
-target_delta = zakahedge.calculate_target_delta()
+#zakahedge = Zakamouline().get_option_info(option)
+#zaka_hedge_df = zakahedge.calculate_target_delta_interval()
+#target_delta = zakahedge.calculate_target_delta()
 #WW
 wwhedge = WW_Hedge().get_option_info(option)
 ww_hedge_df = wwhedge.calculate_target_delta_interval()
+target_delta = wwhedge.calculate_target_delta()
 
 #HedgeAll
 hedgeall = HedgeAll().get_option_info(option) # 将策略类实例化并传入参数
