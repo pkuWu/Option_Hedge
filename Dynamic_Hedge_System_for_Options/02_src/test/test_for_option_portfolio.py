@@ -7,7 +7,7 @@
 from classes.options.option_portfolio import Option_Portfolio
 
 # test for Option_Portfolio
-Spread_paras = {'portfolio_class':'BullCallSpread',
+Spread_paras = {'portfolio_class': 'BullCallSpread',
              'notional':12e6,
              'start_date':'20190129',
              'end_date':'20191231',

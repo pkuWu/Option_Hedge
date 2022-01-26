@@ -1,18 +1,9 @@
 import pandas as pd
-import numpy as np
 from abc import abstractmethod
-from classes.basicData.basicData import BasicData
-from classes.options.Option_Contract import Option_Contract
-
-
+from ..basicData.basicData import BasicData
 class StrategyBase:
-    all_trade_dates = BasicData.ALL_TRADE_DATES
-    MULTIPLIER = {'000300.SH': 300,
-                  '000016.SH': 300,
-                  '000905.SH': 200}
-    future_weight_dict = dict().fromkeys(['code_list', 'weight_info'])
-
     def __init__(self):
+<<<<<<< HEAD
         self.reset()
 
     def reset(self):
@@ -108,3 +99,10 @@ class StrategyBase:
     def get_target_delta(self):
         self.calculate_target_delta()
         return self.target_delta
+=======
+        pass
+
+    @abstractmethod
+    def get_hedging_position(self,greek_df,stock_price):
+        pass
+>>>>>>> parent of cb57cdf (Merge branch 'master' of https://github.com/FLXE-Feidou/Option_Hedge)

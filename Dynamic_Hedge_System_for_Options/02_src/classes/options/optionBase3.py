@@ -15,16 +15,17 @@ import matplotlib.pyplot as plt
 class OptionBase:
     basic_paras_columns = ['sigma', 'left_days', 'left_times', 'sigma_T', 'stock_price']
     base_type = {
-        'Vanilla': ['VanillaCall', 'VanillaPut'],
-        'Barrier': ['cuo', 'cui', 'cdo', 'cdi', 'puo', 'pui', 'pdo', 'pdi'],
-        'OptionPortfolio': ['BullCallSpread', 'BearCallSpread','BullPutSpread','BearPutSpread', 'ButterflySpread', 'Strangle']
+        'VanillaCall': 'Vanilla', 'VanillaPut': 'Vanilla',
+        'BullCallSpread': 'OptionPortfolio', 'BearCallSpread': 'OptionPortfolio',
+        'BullPutSpread': 'OptionPortfolio', 'BearPutSpread': 'OptionPortfolio',
+        'Strangle': 'OptionPortfolio', 'ButterflySpread': 'OptionPortfolio',
     }
 
     def __init__(self):
         self.reset_paras()
         self.all_trade_dates = BasicData.basicData['close'].index.to_list()
-        self.decompose_df = pd.DataFrame(data=None, columns=['option_value_change', 'delta_value', 'theta_value', 'gamma_value',
-                                                             'vega_value', 'high_order_value'])
+        # self.decompose_df = pd.DataFrame(data=None, columns=['option_value_change', 'delta_value', 'theta_value', 'gamma_value',
+        #                                                      'vega_value', 'high_order_value'])
         self.greek_df = pd.DataFrame(data=None, columns=['delta', 'gamma', 'vega', 'theta', 'option_price', 'cash_delta',
                                                          'cash_gamma', 'pos_vega', 'cash_theta', 'option_value'])
 
@@ -58,23 +59,24 @@ class OptionBase:
         self.set_stock_num()
 
     def set_specific_paras(self, para_dict):
-        if self.option_type in self.base_type['Vanilla']:
+        if self.base_type[self.option_type] == 'Vanilla':
             self.set_K(para_dict.get('K'))
-        elif self.option_type in self.base_type['OptionPortfolio']:
+        elif self.base_type[self.option_type] == 'OptionPortfolio':
             self.set_K(para_dict.get('K'))
-        elif self.option_type in self.base_type['Barrier']:
-            self.set_K(para_dict.get('K'))
-            self.set_H(para_dict.get('H'))
+        # elif self.option_type in self.base_type['Barrier']:
+        #     self.set_K(para_dict.get('K'))
+        #     self.set_H(para_dict.get('H'))
+        #   todo
 
     def set_look_back_num(self, look_back_num=None):
         if look_back_num is not None:
             self.look_back_num = look_back_num
 
     def set_option_type(self, option_type=None):
-        if option_type is not None:
+        if option_type in self.base_type:
             self.option_type = option_type
         else:
-            raise ValueError('option_type is not found !')
+            raise ValueError('Invalid option_type!')
 
     def set_notional(self, notional=None):
         if notional is not None:
@@ -154,32 +156,33 @@ class OptionBase:
         self.basic_paras_df.loc[:, 'sigma_T'] = self.basic_paras_df.loc[:, 'sigma'] * np.sqrt(self.basic_paras_df.loc[:, 'left_times'])
         self.basic_paras_df.loc[:, 'stock_price'] = self.stock_prices.loc[self.trade_dates]
 
-    def calculate_return_decomposition(self):
-        self.decompose_df.loc[:, 'option_value_change'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
-        self.decompose_df.loc[:, 'delta_value'] = self.greek_df.loc[:, 'delta'] * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) * self.stock_num
-        self.decompose_df.loc[:, 'gamma_value'] = self.greek_df.loc[:, 'gamma'] * 0.5 * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) ** 2 * self.stock_num
-        self.decompose_df.loc[:, 'theta_value'] = self.greek_df.loc[:, 'theta'] / 252 * self.stock_num
-        self.decompose_df.loc[self.decompose_df.index[0], 'theta_value'] = 0
-        self.decompose_df.loc[:, 'vega_value'] = self.greek_df.loc[:, 'vega'] * self.basic_paras_df.loc[:, 'sigma'].diff().fillna(0) * self.stock_num
-        self.decompose_df.loc[:, 'high_order_value'] = self.decompose_df.loc[:, 'option_value_change'] - self.decompose_df.loc[:, 'delta_value']\
-                                                   - self.decompose_df.loc[:,'gamma_value'] - self.decompose_df.loc[:,'theta_value'] - self.decompose_df.loc[:,'vega_value']
-
-    def calculate_decomposition(self):
-        self.calculate_greeks()
-        self.calculate_return_decomposition()
-
-    def decomposition_vis(self):
-        if self.decompose_df.empty:
-            self.calculate_return_decomposition()
-        df_plot = self.decompose_df.copy()
-        df_plot.index = np.linspace(len(self.decompose_df)/252, 0, len(self.decompose_df))
-        fig, ax1 = plt.subplots(figsize=(15, 10))
-        ax1.set_xlabel('Time')
-        ax1.set_ylabel('Delta')
-        ax1.legend(loc='upper left')
-        ax1.invert_xaxis()
-        df_plot.loc[:, ['option_value_change', 'delta_value', 'gamma_value', 'theta_value', 'vega_value']].cumsum().plot(ax=ax1)
-        plt.show()
+    # def calculate_return_decomposition(self):
+    #     self.decompose_df.loc[:, 'option_value_change'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
+    #     self.decompose_df.loc[:, 'delta_value'] = self.greek_df.loc[:, 'delta'] * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) * self.stock_num
+    #     self.decompose_df.loc[:, 'gamma_value'] = self.greek_df.loc[:, 'gamma'] * 0.5 * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) ** 2 * self.stock_num
+    #     self.decompose_df.loc[:, 'theta_value'] = self.greek_df.loc[:, 'theta'] / 252 * self.stock_num
+    #     self.decompose_df.loc[self.decompose_df.index[0], 'theta_value'] = 0
+    #     self.decompose_df.loc[:, 'vega_value'] = self.greek_df.loc[:, 'vega'] * self.basic_paras_df.loc[:, 'sigma'].diff().fillna(0) * self.stock_num
+    #     self.decompose_df.loc[:, 'high_order_value'] = self.decompose_df.loc[:, 'option_value_change'] - self.decompose_df.loc[:, 'delta_value']\
+    #                                                - self.decompose_df.loc[:,'gamma_value'] - self.decompose_df.loc[:,'theta_value'] - self.decompose_df.loc[:,'vega_value']
+    #
+    # def calculate_decomposition(self):
+    #     if self.greek_df.empty:
+    #         self.calculate_greeks()
+    #     self.calculate_return_decomposition()
+    #
+    # def decomposition_vis(self):
+    #     if self.decompose_df.empty:
+    #         self.calculate_return_decomposition()
+    #     df_plot = self.decompose_df.copy()
+    #     df_plot.index = np.linspace(len(self.decompose_df)/252, 0, len(self.decompose_df))
+    #     fig, ax1 = plt.subplots(figsize=(15, 10))
+    #     ax1.set_xlabel('Time')
+    #     ax1.set_ylabel('Delta')
+    #     ax1.legend(loc='upper left')
+    #     ax1.invert_xaxis()
+    #     df_plot.loc[:, ['option_value_change', 'delta_value', 'gamma_value', 'theta_value', 'vega_value']].cumsum().plot(ax=ax1)
+    #     plt.show()
 
     def get_greek_df(self):
         self.calculate_greeks()
