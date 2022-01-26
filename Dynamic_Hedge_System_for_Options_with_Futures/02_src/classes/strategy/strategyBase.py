@@ -17,6 +17,7 @@ class StrategyBase:
 
     def reset(self):
         self.future = None
+        self.stock_index_name = None
         self.multiplier = None
         self.future_data = None
         self.clear_future_weight_dict()
@@ -29,6 +30,7 @@ class StrategyBase:
 
     def set_paras(self, stock_index_code=None):
         self.set_future(stock_index_code)
+        self.set_stock_index_name(stock_index_code)
         self.get_multiplier(stock_index_code)
         self.set_future_data()
 
@@ -39,6 +41,14 @@ class StrategyBase:
             self.future = 'IH'
         elif stock_index_code == '000905.SH':
             self.future = 'IC'
+
+    def set_stock_index_name(self, stock_index_code=None):
+        if stock_index_code == '000300.SH':
+            self.stock_index_name = '沪深300'
+        elif stock_index_code == '000016.SH':
+            self.stock_index_name = '上证50'
+        elif stock_index_code == '000905.SH':
+            self.stock_index_name = '中证500'
 
     def get_multiplier(self, stock_index_code=None):
         if stock_index_code is not None:
@@ -85,11 +95,17 @@ class StrategyBase:
     def calculate_target_delta(self):
         pass
 
-
     @abstractmethod
     def calculate_future_weight(self):
         pass
 
+    def get_future_code_list(self):
+        return self.future_weight_dict['code_list'].drop(['{0:s}_S.CFE'.format(self.future)], axis=1)  # 因为只有这里有次主力合约
+
     def get_future_weight(self):
         self.calculate_future_weight()
         return self.future_weight_dict['weight_info']
+
+    def get_target_delta(self):
+        self.calculate_target_delta()
+        return self.target_delta
