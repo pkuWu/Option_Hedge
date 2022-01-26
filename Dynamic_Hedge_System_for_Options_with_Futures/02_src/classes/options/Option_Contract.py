@@ -40,6 +40,7 @@ class Option_Contract:
 
     # def create_option_portfolio(self,option_class,option_position,**option_paras):
     def create_option_portfolio(self, option_class, option_position, option_paras):
+        self.portfolio_position = option_position
         # VanillaCall
         if option_class == 'VanillaCall':
             option_dict = self.add_vanilla_option_by_dict(option_class,option_position,option_paras) # option_dict = {'option_obj': ,'option_pos': }
@@ -162,10 +163,11 @@ class Option_Contract:
             r
             option_fee
         '''
-        option_dict = dict().fromkeys(['option_obj','option_pos'])
+        option_dict = dict().fromkeys(['option_obj','option_pos','option_class'])
         option_dict['option_obj'] = eval(option_class)()
         option_dict['option_obj'].set_paras_by_dict(option_paras)
         option_dict['option_pos'] = option_position
+        option_dict['option_class'] = option_class
         option_dict['option_obj'].calculate_greeks()
         return option_dict
 

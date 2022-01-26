@@ -7,7 +7,12 @@ option = Option_Contract().create_option_portfolio(option_class='VanillaCall', o
                                                     'end_date': date(2019, 3, 29), 'K': 3000, 'r': 0.04,
                                                     'option_fee': 1780800})
 
-##WW
+
+#ZAKA
+zakahedge = Zakamouline().get_option_info(option)
+zaka_hedge_df = zakahedge.calculate_target_delta_interval()
+target_delta = zakahedge.calculate_target_delta()
+#WW
 wwhedge = WW_Hedge().get_option_info(option)
 ww_hedge_df = wwhedge.calculate_target_delta_interval()
 
