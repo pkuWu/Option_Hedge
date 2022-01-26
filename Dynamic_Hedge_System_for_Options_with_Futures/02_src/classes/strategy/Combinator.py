@@ -30,7 +30,7 @@ class Combinator:
         self.month_obj = eval(month_strategy)().get_option_info(self.option_obj)
         self.get_future_info()
         self.future_weight = self.month_obj.get_future_weight()
-        self.future_code_list = self.month_obj.get_future_code_list()
+        self.future_code_list = self.month_obj.future_weight_dict['code_list']
 
     def set_delta_strategy(self, delta_strategy):
         self.delta_obj = eval(delta_strategy)().get_option_info(self.option_obj)

@@ -86,7 +86,7 @@ class StrategyBase:
 
     def init_future_weight(self):
         # self.future_weight_dict['code_list'] = sorted(list(set((self.future_data['month_code'].loc[self.trade_dates]).values.ravel())))
-        self.future_weight_dict['code_list'] = self.future_data['month_code'].loc[self.trade_dates]
+        self.future_weight_dict['code_list'] = self.future_data['month_code'].loc[self.trade_dates].drop(['{0:s}_S.CFE'.format(self.future)], axis=1)
         self.future_weight_dict['weight_info'] = pd.DataFrame(0,index=self.trade_dates, columns=self.future_data['open'].columns)
 
     @abstractmethod
@@ -100,9 +100,6 @@ class StrategyBase:
     @abstractmethod
     def calculate_future_weight(self):
         pass
-
-    def get_future_code_list(self):
-        return self.future_weight_dict['code_list'].drop(['{0:s}_S.CFE'.format(self.future)], axis=1)  # 因为只有这里有次主力合约
 
     def get_future_weight(self):
         self.calculate_future_weight()

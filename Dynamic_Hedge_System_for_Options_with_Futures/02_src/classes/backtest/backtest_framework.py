@@ -44,7 +44,7 @@ class BacktestFramework:
 
     def to_sparse_matrix(self):
         self.set_future_code()
-        self.sparse_matrix = pd.DataFrame(index=self.strategy_obj.future_code_list.index, columns=self.future_code)
+        self.sparse_matrix = pd.DataFrame(index=self.strategy_obj.trade_dates, columns=self.future_code)
         for code in self.future_code:
             temp = self.future_position[self.strategy_obj.future_code_list==code].sum(axis=1)
             self.sparse_matrix.loc[:,code] = temp
