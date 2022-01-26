@@ -77,6 +77,9 @@ class OptionPortfolio:
         self.calculate_greeks()
         return self.greek_df
 
+    def temp(self):
+        pass
+
 
 
 # class OptionPortfolio(OptionBase):
