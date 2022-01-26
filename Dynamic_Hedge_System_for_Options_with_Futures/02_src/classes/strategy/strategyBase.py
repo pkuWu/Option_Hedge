@@ -10,7 +10,6 @@ class StrategyBase:
     MULTIPLIER = {'000300.SH': 300,
                   '000016.SH': 300,
                   '000905.SH': 200}
-    future_weight_dict = dict().fromkeys(['code_list', 'weight_info'])
 
     def __init__(self):
         self.reset()
@@ -20,13 +19,9 @@ class StrategyBase:
         self.stock_index_name = None
         self.multiplier = None
         self.future_data = None
-        self.clear_future_weight_dict()
         self.future_delta = None
         self.target_delta = None
-
-    def clear_future_weight_dict(self):
-        self.future_weight_dict['code_list'] = None
-        self.future_weight_dict['weight_info'] = None
+        self.trade_dates = None
 
     def set_paras(self, stock_index_code=None):
         self.set_future(stock_index_code)
@@ -84,27 +79,10 @@ class StrategyBase:
                                           'left_times':left_times}
         return self
 
-    def init_future_weight(self):
-        # self.future_weight_dict['code_list'] = sorted(list(set((self.future_data['month_code'].loc[self.trade_dates]).values.ravel())))
-        self.future_weight_dict['code_list'] = self.future_data['month_code'].loc[self.trade_dates].drop(['{0:s}_S.CFE'.format(self.future)], axis=1)
-        self.future_weight_dict['weight_info'] = pd.DataFrame(0,index=self.trade_dates, columns=self.future_data['open'].columns)
-
     @abstractmethod
     def get_hedging_position(self,greek_df,stock_index_price):
         pass
 
     @abstractmethod
-    def calculate_target_delta(self):
+    def get_option_info(self):
         pass
-
-    @abstractmethod
-    def calculate_future_weight(self):
-        pass
-
-    def get_future_weight(self):
-        self.calculate_future_weight()
-        return self.future_weight_dict['weight_info']
-
-    def get_target_delta(self):
-        self.calculate_target_delta()
-        return self.target_delta

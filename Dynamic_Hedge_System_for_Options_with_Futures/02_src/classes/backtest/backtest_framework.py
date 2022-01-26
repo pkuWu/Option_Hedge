@@ -22,7 +22,7 @@ class BacktestFramework:
 
     def set_options_by_paras(self, option_class, option_position, **option_paras):
         self.option_obj.create_option_portfolio(option_class, option_position, option_paras)
-        self.strategy_obj.get_option(self.option_obj)
+        self.strategy_obj.get_option(self.option_obj.stock_index_code, self.option_obj.trade_dates, self.option_obj.portfolio_position, self.option_obj.option_basket, self.option_obj.greek_df, self.option_obj.public_df)
 
     def set_month_strategy(self, month_strategy):
         self.month_strategy = month_strategy
@@ -35,8 +35,7 @@ class BacktestFramework:
         self.set_delta_strategy(delta_strategy)
 
     def run_backtest(self):
-        self.strategy_obj.set_month_strategy(self.month_strategy)
-        self.strategy_obj.set_delta_strategy(self.delta_strategy)
+        self.strategy_obj.set_hedge_strategy(self.month_strategy, self.delta_strategy)
         self.future_position = self.strategy_obj.get_future_position()
 
     def set_future_code(self):
