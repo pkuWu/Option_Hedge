@@ -93,6 +93,11 @@ class BacktestFramework:
                                                                                       'stock_index_price'] * self.option_obj.multiplier * self.tr
         self.rollover_trading_cost = self.total_trading_cost - self.hedging_trading_cost
 
+    def calculate_future_pnl(self):
+        self.single_future_pnl = self.strategy_obj.future_price.diff().fillna(0) * self.future_position.shift(1).fillna(0) * self.option_obj.multiplier
+        self.total_future_pnl = self.single_future_pnl.apply(lambda x: x.sum(), axis=1)
+
+
     def visualize_analysis(self):
         # 股指与股指期货头寸分析-折线图
         self.get_index_position()
@@ -124,6 +129,9 @@ class BacktestFramework:
         ax.set_ylabel('交易成本/名义本金')
         ax.set_title('交易成本分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
         fig3.savefig('../03_img/交易成本-名义本金分析.jpg')
+
+        #期货对冲端收益拆解（指数收益 + 基差收益）
+
 
     @staticmethod
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):
