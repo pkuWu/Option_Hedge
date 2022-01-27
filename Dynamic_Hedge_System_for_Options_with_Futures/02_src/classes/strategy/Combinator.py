@@ -15,6 +15,7 @@ class Combinator:
         self.multiplier = None
         self.trade_dates = None
         self.future = None
+        self.future_price = None
         self.stock_index_name = None
         self.future_delta = None
         self.future_weight = None
@@ -40,6 +41,7 @@ class Combinator:
         self.get_future_info()
         self.future_weight = self.month_obj.get_future_weight()
         self.future_code_list = self.month_obj.future_weight_dict['code_list']
+        self.future_price = self.month_obj.future_data['close'].loc[self.trade_dates]
 
     def set_delta_strategy(self, delta_strategy):
         self.delta_obj = eval(delta_strategy)().get_option_info(self.portfolio_position, self.option_basket, self.greek_df, self.public_df)
