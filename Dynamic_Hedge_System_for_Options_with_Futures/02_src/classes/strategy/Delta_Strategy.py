@@ -1,10 +1,10 @@
-from .strategyBase import StrategyBase
+from .Delta_StrategyBase import Delta_StrategyBase
 import numpy as np
 import pandas as pd
 from scipy import stats as st
 
 #HEDGE ALL
-class HedgeAll(StrategyBase):
+class HedgeAll(Delta_StrategyBase):
     def __init__(self):
         super().__init__()
 
@@ -12,7 +12,7 @@ class HedgeAll(StrategyBase):
         self.target_delta = -self.option_greek_df.loc[:, 'cash_delta']
 
 # HEDGE HALF
-class HedgeHalf(StrategyBase):
+class HedgeHalf(Delta_StrategyBase):
     def __init__(self):
         super().__init__()
 
@@ -20,7 +20,7 @@ class HedgeHalf(StrategyBase):
         self.target_delta = -self.option_greek_df.loc[:, 'cash_delta']/2
 
 # Whalley Wilmott method
-class WW_Hedge(StrategyBase):
+class WW_Hedge(Delta_StrategyBase):
     def __init__(self,lambda_=0.005,risk_averse=1):
         super().__init__()
         self.risk_averse = risk_averse
@@ -58,7 +58,7 @@ class WW_Hedge(StrategyBase):
         self.target_delta = -WW_Hedge_df['target_delta']
 
 # Zakamouline method
-class Zakamouline(StrategyBase):
+class Zakamouline(Delta_StrategyBase):
     def __init__(self,lambda_=0.005,risk_averse=1):
         super().__init__()
         self.lambda_ = lambda_
