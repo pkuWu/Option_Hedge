@@ -1,5 +1,5 @@
 import pickle
-
+import pickle5 as pickle
 class BasicData:
     with open('./data/python_data/cleandata.pkl', 'rb') as file:
         basicData = pickle.load(file)

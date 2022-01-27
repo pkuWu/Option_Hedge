@@ -4,12 +4,11 @@
 # @Author  : Hao Wu
 # @File    : .py
 from classes.backtest.backtest import Backtest
-from datetime import date
 from classes.options.Vanilla import VanillaCall
 
 from classes.strategy.ww_Hedge import WW_Hedge
 from classes.strategy.zakamouline import Zakamouline
-# backtest = BacktestFramework()
+
 vanilla = VanillaCall()
 ww_hedge = WW_Hedge()
 zakamouline = Zakamouline()

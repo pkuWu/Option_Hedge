@@ -25,6 +25,64 @@ class OptionPortfolio:
             option = eval(self.option_type)()
             option.set_paras_by_dict(para_dict)
             self.option_list.append({'option_object': option, 'option_position': 1})
+
+        elif para_dict.get('option_type') == 'BullCallSpread':
+            option1 = VanillaCall()
+            parameter = para_dict.copy()
+            parameter['K'] = min(para_dict.get('K'))
+            option1.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option1,'option_position':1})
+            option2 = VanillaCall()
+            parameter = para_dict.copy()
+            parameter['K'] = max(para_dict.get('K'))
+            option2.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option2,'option_position':-1})
+
+        elif para_dict.get('option_type') == 'BullPutSpread':
+            option1 = VanillaPut()
+            parameter = para_dict.copy()
+            parameter['K'] = min(para_dict.get('K'))
+            option1.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option1,'option_position':1})
+            option2 = VanillaPut()
+            parameter = para_dict.copy()
+            parameter['K'] = max(para_dict.get('K'))
+            option2.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option2,'option_position':-1})
+
+        elif para_dict.get('option_type') == 'BearCallSpread':
+            option1 = VanillaCall()
+            parameter = para_dict.copy()
+            parameter['K'] = min(para_dict.get('K'))
+            option1.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option1,'option_position':-1})
+            option2 = VanillaCall()
+            parameter = para_dict.copy()
+            parameter['K'] = max(para_dict.get('K'))
+            option2.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option2,'option_position':1})
+
+        elif para_dict.get('option_type') == 'BearPutSpread':
+            option1 = VanillaPut()
+            parameter = para_dict.copy()
+            parameter['K'] = min(para_dict.get('K'))
+            option1.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option1,'option_position':-1})
+            option2 = VanillaPut()
+            parameter = para_dict.copy()
+            parameter['K'] = max(para_dict.get('K'))
+            option2.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option2,'option_position':1})
+
+        elif para_dict.get('option_type') == 'Straddle':
+            parameter = para_dict.copy()
+            option1 = VanillaCall()
+            option1.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option1,'option_position':1})
+            option2 = VanillaPut()
+            option2.set_paras_by_dict(parameter)
+            self.option_list.append({'option_object':option2,'option_position':1})
+
         elif para_dict.get('option_type') == 'Strangle':
             option1 = VanillaPut()
             parameter = para_dict.copy()
@@ -56,10 +114,11 @@ class OptionPortfolio:
         self.decompose_df.loc[:, 'high_order_value'] = self.decompose_df.loc[:, 'option_value_change'] - self.decompose_df.loc[:, 'delta_value']\
                                                    - self.decompose_df.loc[:,'gamma_value'] - self.decompose_df.loc[:,'theta_value'] - self.decompose_df.loc[:,'vega_value']
 
-    def calculate_decomposition(self):
+    def get_return_decomposition(self):
         if self.greek_df.empty:
             self.calculate_greeks()
         self.calculate_return_decomposition()
+        return self.decompose_df
 
     def decomposition_vis(self):
         if self.decompose_df.empty:
@@ -68,7 +127,7 @@ class OptionPortfolio:
         df_plot.index = np.linspace(len(self.decompose_df)/252, 0, len(self.decompose_df))
         fig, ax1 = plt.subplots(figsize=(15, 10))
         ax1.set_xlabel('Time')
-        ax1.set_ylabel('Delta')
+        ax1.set_ylabel('Value')
         ax1.invert_xaxis()
         df_plot.loc[:, ['option_value_change', 'delta_value', 'gamma_value', 'theta_value', 'vega_value']].cumsum().plot(ax=ax1)
         plt.show()
@@ -76,12 +135,6 @@ class OptionPortfolio:
     def get_greek_df(self):
         self.calculate_greeks()
         return self.greek_df
-
-    def temp(self):
-        pass
-
-    def test(self):
-        pass
 
 # class OptionPortfolio(OptionBase):
 #     def __init__(self):
