@@ -73,7 +73,7 @@ class BacktestFramework:
         ax1.set_ylabel('期货持仓量/手数')
         ax2.set_ylabel('{0:s}点位'.format(self.strategy_obj.stock_index_name))
         ax1.set_xlabel('样本日')
-        fig.savefig('../03_img/{0:s}+{1:s}-期货持仓与股指点位.jpg'.format(self.month_strategy,self.delta_strategy))
+        #fig.savefig('../03_img/{0:s}+{1:s}-期货持仓与股指点位.jpg'.format(self.month_strategy,self.delta_strategy))
 
     def get_notional(self):
         self.notional = abs(self.option_obj.portfolio_position * self.option_obj.multiplier *
@@ -109,6 +109,10 @@ class BacktestFramework:
         #基差累积收益
         self.cum_basis_pnl = self.basis_pnl.cumsum()
 
+    def get_option_pnl(self):
+        self.greek_df = self.option_obj.greek_df
+        self.option_pnl = self.greek_df['option_value'].diff().fillna(0)
+
     def visualize_analysis(self):
         # 股指与股指期货头寸分析-折线图
         self.get_index_position()
@@ -121,7 +125,7 @@ class BacktestFramework:
         ax.set_xlabel('样本日')
         ax.set_ylabel('头寸')
         ax.set_title('股指期货与对应的股指头寸分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig1.savefig('../03_img/头寸分析.jpg')
+        #fig1.savefig('../03_img/头寸分析.jpg')
 
         # 交易成本分析（除以名义本金）-堆叠图
         self.calculate_trading_cost()
@@ -139,9 +143,27 @@ class BacktestFramework:
         ax.set_xlabel('样本日')
         ax.set_ylabel('交易成本/名义本金')
         ax.set_title('交易成本分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig3.savefig('../03_img/交易成本-名义本金分析.jpg')
+        #fig3.savefig('../03_img/交易成本-名义本金分析.jpg')
 
-        #期货对冲端收益拆解（指数收益 + 基差收益）
+        #期货对冲端收益拆解
+        self.calculate_pnl()
+        self.get_option_pnl()
+        fig4, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.plot(self.index_position.index, self.cum_total_pnl/self.notional, label='期货端收益/名义本金',
+                color='black', linewidth=2)
+        ax.plot(self.index_position.index, self.option_pnl/self.notional, label='期权端收益/名义本金',
+                color=self.MCOLORS[0],linewidth=1)
+        ax.plot(self.index_position.index, self.cum_index_pnl/self.notional, '--', label='指数收益/名义本金',
+                color='gray', linewidth=1)
+        ax.plot(self.index_position.index, self.cum_basis_pnl/self.notional, label='基差收益/名义本金',
+                color=self.MCOLORS[4], linewidth=1)
+        ax.plot(self.index_position.index, self.total_trading_cost/self.notional, ':', label='交易成本/名义本金',
+                color=self.MCOLORS[1], linewidth=1)
+        ax.legend()
+        ax.set_xlabel('样本日')
+        ax.set_ylabel('收益/名义本金')
+        ax.set_title('总体收益分解，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig4.savefig('../03_img/总体收益分解.jpg')
 
 
     @staticmethod

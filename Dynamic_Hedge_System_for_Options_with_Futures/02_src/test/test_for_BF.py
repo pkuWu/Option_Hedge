@@ -8,5 +8,5 @@ bf.set_month_strategy(month_strategy='Holding_Weighted') #股指期货在每个�
 bf.set_delta_strategy('HedgeAll') #每日收盘前，将delta对冲干净
 bf.set_hedge_strategy('Holding_Weighted','HedgeAll') #上两句或者可以缩写成，要求三个策略设置函数都进行定义
 bf.run_backtest()
-bf.visualize_holding()  # 持仓（左轴堆积图）与点位（右轴折线图）的可视化
+#bf.visualize_holding()  # 持仓（左轴堆积图）与点位（右轴折线图）的可视化
 bf.visualize_analysis() # 股指与股指期货头寸分析-折线图 / 交易成本分析（除以名义本金）-堆叠图 /
