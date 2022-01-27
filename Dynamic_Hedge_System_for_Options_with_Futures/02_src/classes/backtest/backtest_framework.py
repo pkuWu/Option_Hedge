@@ -113,6 +113,25 @@ class BacktestFramework:
         self.greek_df = self.option_obj.greek_df
         self.option_pnl = self.greek_df['option_value'].diff().fillna(0)
 
+    def calculate_account_info(self):
+        future_value = (self.future_position * self.strategy_obj.future_price).sum(axis=1) * self.strategy_obj.multiplier
+        self.account_info = pd.DataFrame(index=self.strategy_obj.trade_dates,
+                                         columns=['margin_account', 'interest_fee', 'delta_nav', 'nav', 'cash_account'])
+        self.account_info.loc[self.account_info.index[0], 'margin_account'] = abs(future_value[0]) * self.mr
+        for i in range(1, len(self.account_info)):
+            self.account_info.loc[self.account_info.index[i], 'margin_account'] = min(max(abs(future_value[i]) * self.mr,
+                                                                                          self.account_info.loc[self.account_info.index[i-1], 'margin_account'] +
+                                                                                          self.total_future_pnl[i] -
+                                                                                          self.total_trading_cost[i]),
+                                                                                      abs(future_value[i]) * self.mr * self.max_ratio)
+        self.account_info.loc[self.account_info.index[0], 'interest_fee'] = 0
+        for i in range(len(self.account_info)):
+            self.account_info.loc[self.account_info.index[i], 'delta_nav'] = self.total_future_pnl[i] - self.total_trading_cost[i] - self.account_info.loc[self.account_info.index[i], 'interest_fee']
+            self.account_info.loc[self.account_info.index[i], 'nav'] = self.account_info.loc[self.account_info.index[i], 'delta_nav'] + self.account_info.loc[self.account_info.index[i], 'delta_nav'].cumsum()[0]
+            self.account_info.loc[self.account_info.index[i], 'cash_account'] = self.account_info.loc[self.account_info.index[i], 'nav'] - self.account_info.loc[self.account_info.index[i], 'margin_account']
+            if i < len(self.account_info)-1:
+                self.account_info.loc[self.account_info.index[i+1], 'interest_fee'] = -self.account_info.loc[self.account_info.index[i], 'cash_account'] * self.ir / 365
+
     def visualize_analysis(self):
         # 股指与股指期货头寸分析-折线图
         self.get_index_position()
@@ -165,6 +184,18 @@ class BacktestFramework:
         ax.set_title('总体收益分解，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
         fig4.savefig('../03_img/总体收益分解.jpg')
 
+        #保证金账户水平序列和现金账户水平序列-折线图
+        self.calculate_account_info()
+        fig5, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.plot(self.account_info.index, self.account_info.loc[:, 'margin_account'], label='保证金账户',
+                color='black', linewidth=1)
+        ax.plot(self.account_info.index, self.account_info.loc[:, 'cash_account'], label='现金账户',
+                color='indianred', linewidth=1)
+        ax.legend()
+        ax.set_xlabel('样本日')
+        ax.set_ylabel('资金数额')
+        ax.set_title('保证金账户和现金账户水平序列分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig5.savefig('../03_img/保证金账户和现金账户水平序列分析.jpg')
 
     @staticmethod
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):
