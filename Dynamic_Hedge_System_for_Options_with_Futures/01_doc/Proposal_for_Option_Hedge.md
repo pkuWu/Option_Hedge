@@ -9,49 +9,286 @@
 
 ## 一、期权产品介绍
 
-这里主要写：期权收益结构、期权希腊值计算方法
+**期权组合Option_Contract包括构建以下种类的期权：**
+
+```
+option_type = {'VanillaCall': '看涨期权',
+               'VanillaPut': '看跌期权',
+               'BullCallSpread': '牛市看涨差价',
+               'BullPutSpread': '牛市看跌差价',
+               'BearCallSpread': '熊市看涨差价',
+               'BearPutSpread': '熊市看跌差价',
+               'BoxSpread': '盒式差价',
+               'Straddle': '跨式组合',
+               'Strangle': '宽跨式组合',
+               'ButterflyCallSpread': '蝶式看涨差价',
+               'ButterflyPutSpread': '蝶式看跌差价',
+               'CalendarCallSpread': '看涨期权构造的日历差价',
+               'CalendarPutSpread': '看跌期权构造的日历差价',
+               'RatioCallSpread': '看涨比率差价',# 看涨比率差价空头、看跌比率差价空头
+               'RatioPutSpread': '看跌比率差价'}
+```
+
+（注：默认position输入为正时是看涨比率差价空头、看跌比率差价空头、其他组合多头。）
+
+假设无风险利率r=4%。
+
+**香草期权greeks计算方法：**
+
+(1) delta
+
+(2) gamma
+
+(3) theta
+
+(4) vega
+
+**香草期权cash_greeks计算方法：**
+
+(1) cash_delta
+
+(2) cash_gamma
+
+(3) cash_theta
+
+**期权组合greeks计算**：组合内香草期权的greeks线性相加。
+
+**期权收益分解：**
+
+(1) option_pnl
+
+(2) delta_pnl
+
+(3) gamma_pnl
+
+(4) theta_pnl
+
+(5) vega_pnl
+
+(6) high_order_pnl
 
 ------
 
 ## 二、回测算法介绍
 
-这里主要写：对于已经给出的stock_position目标序列，如何计算各项收益、交易成本、账户核算的细节
+基于对冲策略得到的各个期权合约target_future_position进行策略收益回测，**功能主要包括**：
 
-------
+1. 期货持仓计算
+2. 交易成本拆解
+3. 期货对冲端收益拆解
+4. 各部分收益累和计算
+5. 保证金账户和现金账户核算
+6. 资金借贷利息损益计算
 
-## 三、对冲策略介绍
+以下列出**比率数据假设**：
 
-每新增一个对冲策略，都要在这里把策略名以及对应的stock_position计算方法详细地写在这里
+(1) 交易成本率 
 
-------
+​	tr=0.0023%
 
-## 四、对冲回测分析框架
+(2) 保证金率 
 
-1、股指与股指期货头寸分析-折线图
+​	mr=14%
 
-​	股指期货头寸 total_future_position：每日各股指期货头寸之和
+(3) 货币借贷利率（资金成本率）
 
-​	股指头寸 total_index_position：股指期货月合约在等value的的条件下对应的股指头寸数目
+​	ir=2% （年化）
+
+(4) 保证金账户上限比率 
+
+​	max_ratio=1.5
+
+以下列出**有关计算交易成本、各项收益及账户核算的各项数据的计算方式及解释**：
+
+**(1) future_position**
+
+​	期货的目标头寸。
+
+**(2) future_price**
+
+​	期货的（收盘）点位。
+
+**(3) future_value**
+
+​	期货价值：调仓后持有的期货头寸价值。
+$$
+future\_value_{t}=\Sigma_i future\_price_{i,t} \times future\_position_{i,t} \times multiplier
+$$
+**(4) index_price**
+
+​	股指的（收盘）点位。
+
+**(5) total_index_position**
+
+​	股指头寸：股指期货月合约在等value的的条件下对应的股指头寸数目。
 $$
 total\_index\_position_{t}=\Sigma_i index\_position_{i,t} \\= \Sigma_i (future\_price_{i,t}\times future\_position_{i,t}/index\_price_{i,t})
 $$
-2、交易成本分析（除以名义本金）-堆叠图
+**(6) notional**
 
-​	名义本金
+​	名义本金：
 $$
 notional=option\_portfolio\_position\times multiplier\times stock\_index\_price_{0}
 $$
-​	总交易成本：所有股指期货合约在每个时点上调仓时产生的总交易成本
+**(7) single_trading_cost**
+
+​	每个单独的股指期货合约在每个时点上调仓时产生的交易成本。
+$$
+single\_trading\_cost_{i,t} 
+\\= |future\_position_{i,t}-future\_position_{i,t-1}|\times future\_price_{i,t}\times multiplier\times tr
+$$
+**(8) total_trading_cost**
+
+​	总交易成本：所有股指期货合约在每个时点上调仓时产生的总交易成本。
 $$
 total\_trading\_cost_{t}
 =\Sigma_i single\_trading\_cost_{i,t} 
 \\= \Sigma_i (|future\_position_{i,t}-future\_position_{i,t-1}|\times future\_price_{i,t}\times multiplier\times tr)
 $$
-​	动态对冲交易成本：基于股指仓位，得到因指数点位变动而导致delta动态对冲中股指期货头寸比例发生变化，	而带来的交易成本
+**(9) hedging_trading_cost**
+
+​	动态对冲交易成本：基于股指仓位，得到因指数点位变动而导致delta动态对冲中股指期货头寸比例发生变化而带来的交易成本
 $$
 hedging\_trading\_cost_{t}\\=|total\_index\_position_{t}-total\_index\_position_{t-1}|\times index\_price_{t} \times multiplier \times tr
 $$
-​	展期交易成本：总成本扣除动态对冲交易成本后剩余的部分
+**(10) rollover_trading_cost**
+
+​	展期交易成本：总成本扣除动态对冲交易成本后剩余的部分。
 $$
 rollover\_trading\_cost_{t}=total\_trading\_cost_{t}-hedging\_trading\_cost_{t}
 $$
+(11) single_future_pnl
+
+(12) total_future_pnl
+
+(13) index_pnl
+
+(14) basis_pnl
+
+(15) cum_total_pnl
+
+(16) cum_index_pnl
+
+(17) cum_basis -pnl
+
+**(18) margin_account**
+
+​	保证金账户数额：建仓时，使保证金账户的存款恰好等于维持保证金要求的数额，在随后的时点上，如果期货点位变动，导致保证金账户水平低于维持保证金要求的水平，则补充保证金至维持保证金水平；如果期货点位变动，导致保证金账户水平高于维持保证金要求的水平的max_ratio倍，则将保证金账户水平降低至维持保证金要求的水平的max_ratio倍；如果期货点位变动，导致保证金账户水平介于上述两者之间，则无需在现金账户与保证金账户之间进行转账。
+$$
+margin\_account_{0}=|value{0}| \times mr
+$$
+
+$$
+margin\_account_{t}=min(max(|future\_value_{t}| \times mr,margin\_account_{t-1}\\+total\_future\_pnl_{t}-total\_trading\_cost_{t}),|value_{t}| \times mr \times max\_ratio)
+$$
+
+**(19) interest_fee**
+
+​	现金账户利息收益：负的cash_account代表存在着资金挪用或者资金拆解，所以会得到正的利息费用；反之，如果cash_account为正，可以投资银行间隔夜拆解市场，赚取利息收益，则利息费用为负。
+$$
+interest\_fee_{t}=-cash\_account_{t-1} \times ir/365
+$$
+**(20) delta_nav**
+
+​	净值变动：每期净值的变动都仅由股指期货损益、交易成本和利息费用构成。
+$$
+\Delta nav_{t}=total\_pnl_{t}-total\_trading_cost_{t}-interest\_fee_{t}
+$$
+**(21) nav**
+
+​	资产净值：每期资产净值的存量。
+$$
+nav_{t}=\Sigma_{i=0}^t\Delta nav_{i}
+$$
+**(22) cash_account**
+
+​	现金账户数额：现金账户在第一期开仓时，用于缴纳交易手续费；在后续期时，作为margin_account设定值的补足水平的配平项。
+$$
+cash\_account_{t}=nav_{t}-margin\_account_{t}
+$$
+
+------
+
+## 三、对冲策略介绍
+
+对冲策略分为两个维度：月合约权重维度和delta对冲敞口维度。下面介绍相应策略及计算方法：
+
+**（一）月合约权重维度**
+
+**(1) Dominant**
+
+​	主连合约策略：只用持仓量最大的月合约动态对冲，每日主连合约权重为1，其余合约权重为0。
+
+**(2) Current_Month**
+
+​	当月合约策略：只用当月合约动态对冲，每日当月合约权重为1，其余合约权重为0。
+
+**(3) Next_Month**
+
+​	下月合约策略：只用下月合约动态对冲，每日下月合约权重为1，其余合约权重为0。
+
+**(4) Current_Season**
+
+​	当季合约策略：只用当季合约动态对冲，每日当季合约权重为1，其余合约权重为0。
+
+**(5) Next_Season**
+
+​	下季合约策略：只用下季合约动态对冲，每日下季合约权重为1，其余合约权重为0。
+
+**(6) Holding_Weighted**
+
+​	持仓量加权策略：使用持仓量作为当月、下月、当季、下季四个合约的权重进行动态对冲。
+
+**(7) Volume_Weighted**
+
+​	成交量加权策略：使用成交量作为当月、下月、当季、下季四个合约的权重进行动态对冲。
+
+**（二）delta对冲敞口维度**
+
+(1) HedgeAll
+
+(2) HedgeHalf
+
+(3) WW_hedge
+
+(4) Zakamouline
+
+------
+
+## 四、对冲回测分析框架
+
+对于构建的期权组合数据及相应的对冲策略，进行对冲回测后输出一份可视化Report，Report包含图片如下：
+
+(1) 期权收益分解折线图
+
+(2) 期货持仓与股指点位分析折线图
+
+(3) 股指与股指期货头寸分析折线图
+
+(4) 交易成本拆解分析（除以名义本金）堆叠图
+
+​	动态对冲交易成本/名义本金、展期交易成本/名义本金
+
+(5) 期货对冲端收益拆解分析折线图
+
+​	整体收益/名义本金、期权端收益/名义本金、指数收益/名义本金、基差收益/名义本金、交易成本/名义本金
+
+(6) 期货端收益/名义本金频数分布直方图
+
+(7) 期权端收益/名义本金频数分布直方图
+
+(8) 指数收益/名义本金频数分布直方图
+
+(9) 基差收益/名义本金频数分布直方图
+
+(10) 交易成本/名义本金频数分布直方图
+
+(11) 保证金账户和现金账户序列分析折线图
+
+(12) 保证金账户资金频数分布直方图
+
+(13) 现金账户频数分布直方图
+
+(14) 现金账户隐含资金成本序列折线图
+
+(15) 现金账户隐含资金成本/名义本金频数分布直方图
