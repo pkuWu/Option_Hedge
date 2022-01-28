@@ -37,6 +37,7 @@ class Option_Contract:
         self.end_date = None
         self.option_fee = 0
         self.trade_dates = None
+        self.fig = None
 
     # def create_option_portfolio(self,option_class,option_position,**option_paras):
     def create_option_portfolio(self, option_class, option_position, option_paras):
@@ -370,9 +371,11 @@ class Option_Contract:
         self.pnl_df.loc[:, 'high_order_pnl'] = self.pnl_df.loc[:, 'option_pnl']-self.pnl_df.loc[:, 'delta_pnl']-self.pnl_df.loc[:, 'gamma_pnl']-self.pnl_df.loc[:, 'vega_pnl']-self.pnl_df.loc[:, 'theta_pnl']
 
     def get_pnl_df(self):
+        self.calculate_portfolio_pnl_df()
         return self.pnl_df
 
     def visualize_pnl(self):
+        self.calculate_portfolio_pnl_df()
         fig, ax = self.init_canvas()
         ax.plot(self.trade_dates, self.pnl_df.loc[:, 'delta_pnl'].cumsum(), label = 'delta_pnl')
         ax.plot(self.trade_dates, self.pnl_df.loc[:, 'gamma_pnl'].cumsum(), label = 'gamma_pnl')
@@ -389,7 +392,8 @@ class Option_Contract:
         elif self.option_class in ['CalendarCallSpread', 'CalendarPutSpread']:
             ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，K:{3:,.2f}，到期日1:{4:s},到期日2:{5:s}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price, str(self.end_date), str(self.end_date_after)), fontsize = 10)
         ax.legend()
-        fig.savefig('../03_img/{0:s}收益分解.jpg'.format(self.option_name))
+        self.fig = fig
+        #fig.savefig('../03_img/{0:s}收益分解.jpg'.format(self.option_name))
 
     @staticmethod
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):

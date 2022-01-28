@@ -3,6 +3,7 @@ from classes.strategy.Combinator import Combinator
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 class BacktestFramework:
@@ -56,24 +57,9 @@ class BacktestFramework:
         self.set_future_code()
         self.sparse_matrix = pd.DataFrame(index=self.strategy_obj.trade_dates, columns=self.future_code)
         for code in self.future_code:
-            temp = self.future_position[self.strategy_obj.future_code_list==code].sum(axis=1)
+            temp = self.future_position[self.strategy_obj.future_code_list == code].sum(axis=1)
             self.sparse_matrix.loc[:, code] = temp
         return self.sparse_matrix
-
-    def visualize_holding(self):
-        self.to_sparse_matrix()
-        fig, ax1 = self.init_canvas([0.05, 0.08, 0.88, 0.87])
-        ax1.stackplot(self.strategy_obj.trade_dates, self.sparse_matrix.T, colors=self.MCOLORS[:len(self.future_code)],
-                      labels=self.future_code)
-        ax1.set_title('期货持仓量，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        ax2 = ax1.twinx()
-        ax2.plot(self.strategy_obj.trade_dates, self.option_obj.public_df.loc[:,'stock_index_price'],
-                 label='{0:s}点位（右轴）'.format(self.strategy_obj.stock_index_name), linewidth=0.5, color='black')
-        fig.legend(loc='upper right')
-        ax1.set_ylabel('期货持仓量/手数')
-        ax2.set_ylabel('{0:s}点位'.format(self.strategy_obj.stock_index_name))
-        ax1.set_xlabel('样本日')
-        #fig.savefig('../03_img/{0:s}+{1:s}-期货持仓与股指点位.jpg'.format(self.month_strategy,self.delta_strategy))
 
     def get_notional(self):
         self.notional = abs(self.option_obj.portfolio_position * self.option_obj.multiplier *
@@ -110,8 +96,7 @@ class BacktestFramework:
         self.cum_basis_pnl = self.basis_pnl.cumsum()
 
     def get_option_pnl(self):
-        self.greek_df = self.option_obj.greek_df
-        self.option_pnl = self.greek_df['option_value'].diff().fillna(0)
+        self.option_pnl = self.option_obj.pnl_df.loc[:, 'option_pnl']
 
     def calculate_account_info(self):
         future_value = (self.future_position * self.strategy_obj.future_price).sum(axis=1) * self.strategy_obj.multiplier
@@ -132,10 +117,29 @@ class BacktestFramework:
             if i < len(self.account_info)-1:
                 self.account_info.loc[self.account_info.index[i+1], 'interest_fee'] = -self.account_info.loc[self.account_info.index[i], 'cash_account'] * self.ir / 365
 
-    def visualize_analysis(self):
+    def visualize_analysis(self, report=True):
+        # 期权收益分解
+        self.option_obj.visualize_pnl()
+        fig0 = self.option_obj.fig
+
+        # 期货持仓分析
+        self.to_sparse_matrix()
+        fig1, ax1 = self.init_canvas([0.05, 0.08, 0.88, 0.87])
+        ax1.stackplot(self.strategy_obj.trade_dates, self.sparse_matrix.T, colors=self.MCOLORS[:len(self.future_code)],
+                      labels=self.future_code)
+        ax1.set_title('期货持仓量，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        ax2 = ax1.twinx()
+        ax2.plot(self.strategy_obj.trade_dates, self.option_obj.public_df.loc[:, 'stock_index_price'],
+                 label='{0:s}点位（右轴）'.format(self.strategy_obj.stock_index_name), linewidth=0.5, color='black')
+        fig1.legend(loc='upper right')
+        ax1.set_ylabel('期货持仓量/手数')
+        ax2.set_ylabel('{0:s}点位'.format(self.strategy_obj.stock_index_name))
+        ax1.set_xlabel('样本日')
+        # fig1.savefig('../03_img/{0:s}+{1:s}-期货持仓与股指点位.jpg'.format(self.month_strategy,self.delta_strategy))
+
         # 股指与股指期货头寸分析-折线图
         self.get_index_position()
-        fig1, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        fig2, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
         ax.plot(self.index_position.index, self.future_position.sum(axis=1), label='股指期货头寸',
                 color='black', linewidth=1)
         ax.plot(self.index_position.index, self.total_index_position, label='股指头寸',
@@ -144,7 +148,7 @@ class BacktestFramework:
         ax.set_xlabel('样本日')
         ax.set_ylabel('头寸')
         ax.set_title('股指期货与对应的股指头寸分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        #fig1.savefig('../03_img/头寸分析.jpg')
+        #fig2.savefig('../03_img/头寸分析.jpg')
 
         # 交易成本分析（除以名义本金）-堆叠图
         self.calculate_trading_cost()
@@ -182,7 +186,7 @@ class BacktestFramework:
         ax.set_xlabel('样本日')
         ax.set_ylabel('收益/名义本金')
         ax.set_title('总体收益分解，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig4.savefig('../03_img/总体收益分解.jpg')
+        #fig4.savefig('../03_img/总体收益分解.jpg')
 
         # 期货端收益/名义本金频数分布直方图
         fig5, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -190,7 +194,7 @@ class BacktestFramework:
         ax.set_xlabel('期货端收益/名义本金')
         ax.set_ylabel('频数')
         ax.set_title('期货端收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig5.savefig('../03_img/期货端收益-名义本金.jpg')
+        #fig5.savefig('../03_img/期货端收益-名义本金.jpg')
 
         # 期权端收益/名义本金频数分布直方图
         fig6, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -198,7 +202,7 @@ class BacktestFramework:
         ax.set_xlabel('期权端收益/名义本金')
         ax.set_ylabel('频数')
         ax.set_title('期权端收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig6.savefig('../03_img/期权端收益-名义本金.jpg')
+        #fig6.savefig('../03_img/期权端收益-名义本金.jpg')
 
         # 指数收益/名义本金频数分布直方图
         fig7, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -206,7 +210,7 @@ class BacktestFramework:
         ax.set_xlabel('指数收益/名义本金')
         ax.set_ylabel('频数')
         ax.set_title('指数收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig7.savefig('../03_img/指数收益-名义本金.jpg')
+        #fig7.savefig('../03_img/指数收益-名义本金.jpg')
 
         # 基差收益/名义本金频数分布直方图
         fig8, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -214,7 +218,7 @@ class BacktestFramework:
         ax.set_xlabel('基差收益/名义本金')
         ax.set_ylabel('频数')
         ax.set_title('基差收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig8.savefig('../03_img/基差收益-名义本金.jpg')
+        #fig8.savefig('../03_img/基差收益-名义本金.jpg')
 
         # 交易成本/名义本金频数分布直方图
         fig9, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -222,7 +226,7 @@ class BacktestFramework:
         ax.set_xlabel('交易成本/名义本金')
         ax.set_ylabel('频数')
         ax.set_title('交易成本/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig9.savefig('../03_img/交易成本-名义本金.jpg')
+        #fig9.savefig('../03_img/交易成本-名义本金.jpg')
 
         #保证金账户水平序列和现金账户水平序列-折线图
         self.calculate_account_info()
@@ -235,7 +239,7 @@ class BacktestFramework:
         ax.set_xlabel('样本日')
         ax.set_ylabel('资金数额')
         ax.set_title('保证金账户和现金账户水平序列分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig10.savefig('../03_img/保证金账户和现金账户水平序列分析.jpg')
+        #fig10.savefig('../03_img/保证金账户和现金账户水平序列分析.jpg')
 
         # 保证金账户资金频数分布直方图
         fig11, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -243,7 +247,7 @@ class BacktestFramework:
         ax.set_xlabel('保证金账户资金数额')
         ax.set_ylabel('频数')
         ax.set_title('保证金账户资金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig11.savefig('../03_img/保证金账户.jpg')
+        #fig11.savefig('../03_img/保证金账户.jpg')
 
         # 现金账户频数分布直方图
         fig12, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -251,7 +255,44 @@ class BacktestFramework:
         ax.set_xlabel('现金账户资金数额')
         ax.set_ylabel('频数')
         ax.set_title('现金账户资金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig12.savefig('../03_img/现金账户.jpg')
+        #fig12.savefig('../03_img/现金账户.jpg')
+
+        #现金账户隐含资金成本/名义本金-折线图
+        fig13, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.plot(self.account_info.index, self.account_info.loc[:, 'interest_fee']/self.notional, label='现金账户隐含资金成本/名义本金',
+                color='black', linewidth=1)
+        ax.legend()
+        ax.set_xlabel('样本日')
+        ax.set_ylabel('现金账户隐含资金成本/名义本金')
+        ax.set_title('现金账户隐含资金成本分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        #fig13.savefig('../03_img/现金账户隐含资金成本分析.jpg')
+
+        # 现金账户隐含资金成本/名义本金频数分布直方图
+        fig14, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.account_info.loc[:, 'interest_fee']/self.notional, bins=40, edgecolor='k', color='lightcoral')
+        ax.set_xlabel('现金账户隐含资金成本/名义本金')
+        ax.set_ylabel('频数')
+        ax.set_title('现金账户隐含资金成本/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        #fig14.savefig('../03_img/现金账户隐含资金成本-名义本金频数分布直方图.jpg')
+
+        if report:
+            report_name = '../03_img/期权类型：{0:s}+{1:s}，对冲策略：{2:s}+{3:s}.pdf'.format(self.strategy_obj.stock_index_name, self.option_obj.option_name, self.month_strategy, self.delta_strategy)
+            with PdfPages(report_name, 'wb+') as pdf:
+                pdf.savefig(fig0)
+                pdf.savefig(fig1)
+                pdf.savefig(fig2)
+                pdf.savefig(fig3)
+                pdf.savefig(fig4)
+                pdf.savefig(fig5)
+                pdf.savefig(fig6)
+                pdf.savefig(fig7)
+                pdf.savefig(fig8)
+                pdf.savefig(fig9)
+                pdf.savefig(fig10)
+                pdf.savefig(fig11)
+                pdf.savefig(fig12)
+                pdf.savefig(fig13)
+                pdf.savefig(fig14)
 
     @staticmethod
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):
