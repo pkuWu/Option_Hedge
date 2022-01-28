@@ -81,6 +81,7 @@ class BacktestFramework:
 
     def calculate_pnl(self):
         self.get_index_position()
+        self.get_option_pnl()
         self.single_future_pnl = self.strategy_obj.future_price.diff().fillna(0) * self.future_position.shift(1).fillna(0) * self.option_obj.multiplier
         self.total_future_pnl = self.single_future_pnl.apply(lambda x: x.sum(), axis=1)
         #股指对冲收益
@@ -95,18 +96,25 @@ class BacktestFramework:
         #基差累积收益
         self.cum_basis_pnl = self.basis_pnl.cumsum()
 
+    def calculate_total_pnl(self):
+        self.calculate_pnl()
+        self.calculate_account_info()
+        #整体收益
+        self.total_pnl = (self.total_future_pnl + self.index_pnl + self.basis_pnl +self.option_pnl - self.total_trading_cost -\
+                         self.account_info['interest_fee']).cumsum()
+
     def get_option_pnl(self):
         self.option_pnl = self.option_obj.pnl_df.loc[:, 'option_pnl']
 
     def calculate_account_info(self):
+        self.calculate_pnl()
         future_value = (self.future_position * self.strategy_obj.future_price).sum(axis=1) * self.strategy_obj.multiplier
         self.account_info = pd.DataFrame(index=self.strategy_obj.trade_dates,
                                          columns=['margin_account', 'interest_fee', 'delta_nav', 'nav', 'cash_account'])
         self.account_info.loc[self.account_info.index[0], 'margin_account'] = abs(future_value[0]) * self.mr
         for i in range(1, len(self.account_info)):
             self.account_info.loc[self.account_info.index[i], 'margin_account'] = min(max(abs(future_value[i]) * self.mr,
-                                                                                          self.account_info.loc[self.account_info.index[i-1], 'margin_account'] +
-                                                                                          self.total_future_pnl[i] -
+                                                                                          self.account_info.loc[self.account_info.index[i-1], 'margin_account'] + self.total_future_pnl[i] - \
                                                                                           self.total_trading_cost[i]),
                                                                                       abs(future_value[i]) * self.mr * self.max_ratio)
         self.account_info.loc[self.account_info.index[0], 'interest_fee'] = 0
@@ -170,10 +178,12 @@ class BacktestFramework:
 
         #期货对冲端收益拆解
         self.calculate_pnl()
-        self.get_option_pnl()
+        self.calculate_total_pnl()
         fig4, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
-        ax.plot(self.index_position.index, self.cum_total_pnl/self.notional, label='期货端收益/名义本金',
+        ax.plot(self.index_position.index,self.total_pnl/self.notional,label='整体收益/名义本金',
                 color='black', linewidth=2)
+        ax.plot(self.index_position.index, self.cum_total_pnl/self.notional, label='期货端收益/名义本金',
+                color=self.MCOLORS[5], linewidth=1)
         ax.plot(self.index_position.index, self.option_pnl/self.notional, label='期权端收益/名义本金',
                 color=self.MCOLORS[0],linewidth=1)
         ax.plot(self.index_position.index, self.cum_index_pnl/self.notional, '--', label='指数收益/名义本金',
