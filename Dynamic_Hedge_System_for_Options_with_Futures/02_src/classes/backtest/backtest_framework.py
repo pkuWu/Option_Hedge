@@ -184,9 +184,49 @@ class BacktestFramework:
         ax.set_title('总体收益分解，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
         fig4.savefig('../03_img/总体收益分解.jpg')
 
+        # 期货端收益/名义本金频数分布直方图
+        fig5, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.cum_total_pnl/self.notional, bins=40, edgecolor='k', color="dimgray")
+        ax.set_xlabel('期货端收益/名义本金')
+        ax.set_ylabel('频数')
+        ax.set_title('期货端收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig5.savefig('../03_img/期货端收益-名义本金.jpg')
+
+        # 期权端收益/名义本金频数分布直方图
+        fig6, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.option_pnl/self.notional, bins=40, edgecolor='k', color=self.MCOLORS[0])
+        ax.set_xlabel('期权端收益/名义本金')
+        ax.set_ylabel('频数')
+        ax.set_title('期权端收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig6.savefig('../03_img/期权端收益-名义本金.jpg')
+
+        # 指数收益/名义本金频数分布直方图
+        fig7, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.cum_index_pnl/self.notional, bins=40, edgecolor='k', color='lightgray')
+        ax.set_xlabel('指数收益/名义本金')
+        ax.set_ylabel('频数')
+        ax.set_title('指数收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig7.savefig('../03_img/指数收益-名义本金.jpg')
+
+        # 基差收益/名义本金频数分布直方图
+        fig8, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.cum_basis_pnl/self.notional, bins=40, edgecolor='k', color=self.MCOLORS[4])
+        ax.set_xlabel('基差收益/名义本金')
+        ax.set_ylabel('频数')
+        ax.set_title('基差收益/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig8.savefig('../03_img/基差收益-名义本金.jpg')
+
+        # 交易成本/名义本金频数分布直方图
+        fig9, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.total_trading_cost/self.notional, bins=40, edgecolor='k', color=self.MCOLORS[1])
+        ax.set_xlabel('交易成本/名义本金')
+        ax.set_ylabel('频数')
+        ax.set_title('交易成本/名义本金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig9.savefig('../03_img/交易成本-名义本金.jpg')
+
         #保证金账户水平序列和现金账户水平序列-折线图
         self.calculate_account_info()
-        fig5, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        fig10, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
         ax.plot(self.account_info.index, self.account_info.loc[:, 'margin_account'], label='保证金账户',
                 color='black', linewidth=1)
         ax.plot(self.account_info.index, self.account_info.loc[:, 'cash_account'], label='现金账户',
@@ -195,7 +235,23 @@ class BacktestFramework:
         ax.set_xlabel('样本日')
         ax.set_ylabel('资金数额')
         ax.set_title('保证金账户和现金账户水平序列分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
-        fig5.savefig('../03_img/保证金账户和现金账户水平序列分析.jpg')
+        fig10.savefig('../03_img/保证金账户和现金账户水平序列分析.jpg')
+
+        # 保证金账户资金频数分布直方图
+        fig11, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.account_info.loc[:, 'margin_account'], bins=40, edgecolor='k', color='darkgray')
+        ax.set_xlabel('保证金账户资金数额')
+        ax.set_ylabel('频数')
+        ax.set_title('保证金账户资金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig11.savefig('../03_img/保证金账户.jpg')
+
+        # 现金账户频数分布直方图
+        fig12, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.hist(self.account_info.loc[:, 'cash_account'], bins=40, edgecolor='k', color='lightcoral')
+        ax.set_xlabel('现金账户资金数额')
+        ax.set_ylabel('频数')
+        ax.set_title('现金账户资金频数分布直方图，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+        fig12.savefig('../03_img/现金账户.jpg')
 
     @staticmethod
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):
