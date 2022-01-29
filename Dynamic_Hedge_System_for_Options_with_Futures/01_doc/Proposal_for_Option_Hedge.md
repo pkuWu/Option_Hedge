@@ -37,82 +37,47 @@ option_type = {'VanillaCall': '看涨期权',
 
 *看涨期权：*
 
-(1) delta
-$$
-delta = N(d_1)\\ d_1=\frac{ln(\frac{S}{K})+(r+\frac{1}{2}\sigma^2)T}{\sigma\sqrt{T}},d_2=d_1-\sigma\sqrt{T}
-$$
-(2) gamma
-$$
-gamma=\frac{N'(d_1)}{S\sigma\sqrt{T}}
-$$
-(3) theta
-$$
-theta=-\frac{SN'(d_1)\sigma}{2\sqrt{T}}-rKe^{-rT}N(d_2)
-$$
-(4) vega
-$$
-vega=S\sqrt{T}N'(d_1)
-$$
+(1) $delta = N(d_1), d_1=\frac{ln(\frac{S}{K})+(r+\frac{1}{2}\sigma^2)T}{\sigma\sqrt{T}},d_2=d_1-\sigma\sqrt{T}$
+
+(2) $gamma=\frac{N'(d_1)}{S\sigma\sqrt{T}}$
+
+(3) $theta=-\frac{SN'(d_1)\sigma}{2\sqrt{T}}-rKe^{-rT}N(d_2)$theta
+
+(4) $vega=S\sqrt{T}N'(d_1)$
+
 *看跌期权：*
 
-(1) delta
-$$
-delta = N(d_1)-1
-$$
-(2) gamma
-$$
-gamma=\frac{N'(d_1)}{S\sigma\sqrt{T}}
-$$
-(3) theta
-$$
-theta=-\frac{SN'(d_1)\sigma}{2\sqrt{T}}+rKe^{-rT}N(-d_2)
-$$
-(4) vege
-$$
-vega=S\sqrt{T}N'(d_1)
-$$
+(1) $delta = N(d_1)-1$
+
+(2) $gamma=\frac{N'(d_1)}{S\sigma\sqrt{T}}$
+
+(3) $theta=-\frac{SN'(d_1)\sigma}{2\sqrt{T}}+rKe^{-rT}N(-d_2)$
+
+(4) $vega=S\sqrt{T}N'(d_1)$
+
 **香草期权cash_greeks计算方法：**
 
-(1) cash_delta
-$$
-cash\_delta=delta\times S\times multiplier
-$$
-(2) cash_gamma
-$$
-cash\_gamma=gamma\times \frac{S^2}{100} \times multiplier
-$$
-(3) cash_theta
-$$
-cash\_theta=\frac{theta\times multiplier}{252}
-$$
+(1) $cash\_delta=delta\times S\times multiplier$
+
+(2) $cash\_gamma=gamma\times \frac{S^2}{100} \times multiplier$
+
+(3) $cash\_theta=\frac{theta\times multiplier}{252}$
+
 **期权组合greeks计算**：组合内香草期权的greeks线性相加。
 
 **期权收益分解：**
 
-(1) option_pnl
-$$
-option\_pnl=\Delta(option\_value)=\Delta(option\_price\times multiplier)\\=\Delta(SN{(d_1)}-Ke^{-rT}N(d_2)\times multiplier)
-$$
-(2) delta_pnl
-$$
-delta\_pnl=delta\times \Delta S
-$$
-(3) gamma_pnl
-$$
-gamma\_pnl=\frac{1}{2}\times gamma\times (\Delta S)^2
-$$
-(4) theta_pnl
-$$
-theta\_pnl=theta\times \Delta t
-$$
-(5) vega_pnl
-$$
-vega\_pnl=vega\times \Delta \sigma
-$$
-(6) high_order_pnl
-$$
-high\_order\_pnl=option\_pnl-delta\_pnl-gamma\_pnl-theta\_pnl-vega\_pnl
-$$
+(1) $option\_pnl=\Delta(option\_value)=\Delta(option\_price\times multiplier)=\Delta(SN{(d_1)}-Ke^{-rT}N(d_2)\times multiplier)$
+
+(2) $delta\_pnl=delta\times \Delta S$
+
+(3) $gamma\_pnl=\frac{1}{2}\times gamma\times (\Delta S)^2$
+
+(4) $theta\_pnl=theta\times \Delta t$
+
+(5) $vega\_pnl=vega\times \Delta \sigma$
+
+(6) $high\_order\_pnl=option\_pnl-delta\_pnl-gamma\_pnl-theta\_pnl-vega\_pnl$
 
 
 ------
@@ -122,163 +87,126 @@ $$
 基于对冲策略得到的各个期权合约target_future_position进行策略收益回测，**功能主要包括**：
 
 1. 期货持仓计算
+
 2. 交易成本拆解
+
 3. 期货对冲端收益拆解
+
 4. 各部分收益累和计算
+
 5. 保证金账户和现金账户核算
+
 6. 资金借贷利息损益计算
+
+   
 
 以下列出**比率数据假设**：
 
-(1) 交易成本率 
+(1) 交易成本率  $tr=0.0023\%$
 
-​	tr=0.0023%
+(2) 保证金率 $mr=14\%$
 
-(2) 保证金率 
+(3) 货币借贷利率（资金成本率）$ir=2\% $ （年化）
 
-​	mr=14%
+(4) 保证金账户上限比率 $max\_ratio=1.5$
 
-(3) 货币借贷利率（资金成本率）
 
-​	ir=2% （年化）
-
-(4) 保证金账户上限比率 
-
-​	max_ratio=1.5
 
 以下列出**有关计算交易成本、各项收益及账户核算的各项数据的计算方式及解释**：
 
-**(1) future_position**
+**(1) future_position**: 期货的目标头寸。
 
-​	期货的目标头寸。
+**(2) future_price**: 期货的（收盘）点位。
 
-**(2) future_price**
+**(3) future_value**: 期货价值：调仓后持有的期货头寸价值。
 
-​	期货的（收盘）点位。
-
-**(3) future_value**
-
-​	期货价值：调仓后持有的期货头寸价值。
 $$
 future\_value_{t}=\Sigma_i future\_price_{i,t} \times future\_position_{i,t} \times multiplier
 $$
-**(4) index_price**
 
-​	股指的（收盘）点位。
+**(4) index_price**: 股指的（收盘）点位。
 
-**(5) total_index_position**
+**(5) total_index_position**: 股指头寸：股指期货月合约在等value的的条件下对应的股指头寸数目。
 
-​	股指头寸：股指期货月合约在等value的的条件下对应的股指头寸数目。
 $$
-total\_index\_position_{t}=\Sigma_i index\_position_{i,t} \\= \Sigma_i (future\_price_{i,t}\times future\_position_{i,t}/index\_price_{i,t})
+total\_index\_position_{t}=\Sigma_i index\_position_{i,t}\\=\Sigma_i (future\_price_{i,t}\times future\_position_{i,t}/index\_price_{i,t})
 $$
-**(6) notional**
 
-​	名义本金：
+**(6) notional**: 名义本金：
+
 $$
 notional=option\_portfolio\_position\times multiplier\times stock\_index\_price_{0}
 $$
-**(7) single_trading_cost**
 
-​	每个单独的股指期货合约在每个时点上调仓时产生的交易成本。
+**(7) single_trading_cost**: 每个单独的股指期货合约在每个时点上调仓时产生的交易成本。
 $$
-single\_trading\_cost_{i,t} 
-\\= |future\_position_{i,t}-future\_position_{i,t-1}|\times future\_price_{i,t}\times multiplier\times tr
+single\_trading\_cost_{i,t}=|future\_position_{i,t}-future\_position_{i,t-1}|\\\times future\_price_{i,t}\times multiplier\times tr
 $$
-**(8) total_trading_cost**
 
-​	总交易成本：所有股指期货合约在每个时点上调仓时产生的总交易成本。
-$$
-total\_trading\_cost_{t}
-=\Sigma_i single\_trading\_cost_{i,t} 
-\\= \Sigma_i (|future\_position_{i,t}-future\_position_{i,t-1}|\times future\_price_{i,t}\times multiplier\times tr)
-$$
-**(9) hedging_trading_cost**
+**(8) total_trading_cost**: 总交易成本：所有股指期货合约在每个时点上调仓时产生的总交易成本。
 
-​	动态对冲交易成本：基于股指仓位，得到因指数点位变动而导致delta动态对冲中股指期货头寸比例发生变化而带来的交易成本
 $$
-hedging\_trading\_cost_{t}\\=|total\_index\_position_{t}-total\_index\_position_{t-1}|\times index\_price_{t} \times multiplier \times tr
+total\_trading\_cost_{t}=\Sigma_i single\_trading\_cost_{i,t} \\= \Sigma_i (|future\_position_{i,t}-future\_position_{i,t-1}|\times future\_price_{i,t}\times multiplier\times tr)
 $$
-**(10) rollover_trading_cost**
 
-​	展期交易成本：总成本扣除动态对冲交易成本后剩余的部分。
+**(9) hedging_trading_cost**: 动态对冲交易成本：基于股指仓位，得到因指数点位变动而导致delta动态对冲中股指期货头寸比例发生变化而带来的交易成本。
+
+$$
+hedging\_trading\_cost_{t}=|total\_index\_position_{t}-total\_index\_position_{t-1}|\\\times index\_price_{t} \times multiplier \times tr
+$$
+
+**(10) rollover_trading_cost**: 展期交易成本：总成本扣除动态对冲交易成本后剩余的部分。
+
 $$
 rollover\_trading\_cost_{t}=total\_trading\_cost_{t}-hedging\_trading\_cost_{t}
 $$
-**(11) single_future_pnl**
 
-​	第i个股指期货在第t个时间段上产生的pnl。
+**(11) single_future_pnl**: 第i个股指期货在第t个时间段上产生的pnl。
 $$
 single\_future\_pnl_{i,t}=(future\_price_{i,t}-future\_price_{i,t-1})×future\_position_{i,t-1}×multiplier
 $$
-**(12) total_future_pnl**
-
-​	股指期货组合在第t个时间段上产生的整体pnl。
+**(12) total_future_pnl**: 股指期货组合在第t个时间段上产生的整体pnl。
 $$
 total\_future\_pnl_{t}=\Sigma_{i}single\_future\_pnl_{i,t}
 $$
-**(13) index_pnl**
-
-​	股指对冲收益：
+**(13) index_pnl**: 股指对冲收益：
 $$
 index\_pnl_{t}=(index\_price_{t}-index\_price_{t-1})×total\_index\_position_{t-1}×multiplier
 $$
-**(14) basis_pnl**
-
-​	基差收益：
+**(14) basis_pnl**: 基差收益：
 $$
 basic\_pnl_{t}=total\_future\_pnl_{t}-index\_pnl_{t}
 $$
-**(15) cum_total_pnl**
-
-​	期货对冲端累积收益：
+**(15) cum_total_pnl**: 期货对冲端累积收益：
 $$
 cum\_total\_pnl_{t}=\Sigma_{j=0}^ttotal\_future\_pnl_{j}
 $$
-**(16) cum_index_pnl**
-
-​	对冲端指数累积收益：
+**(16) cum_index_pnl**: 对冲端指数累积收益：
 $$
 cum\_index\_pnl_{t}=\Sigma_{j=0}^tindex\_pnl_{j}
 $$
-**(17) cum_basis_pnl**
-
-​	基差累积收益：
+**(17) cum_basis_pnl**: 基差累积收益：
 $$
 cum\_basis\_pnl_{t}=\Sigma_{j=0}^tbasis\_pnl_{j}
 $$
-**(18) margin_account**
-
-​	保证金账户数额：建仓时，使保证金账户的存款恰好等于维持保证金要求的数额，在随后的时点上，如果期货点位变动，导致保证金账户水平低于维持保证金要求的水平，则补充保证金至维持保证金水平；如果期货点位变动，导致保证金账户水平高于维持保证金要求的水平的max_ratio倍，则将保证金账户水平降低至维持保证金要求的水平的max_ratio倍；如果期货点位变动，导致保证金账户水平介于上述两者之间，则无需在现金账户与保证金账户之间进行转账。
+**(18) margin_account**: 保证金账户数额：建仓时，使保证金账户的存款恰好等于维持保证金要求的数额，在随后的时点上，如果期货点位变动，导致保证金账户水平低于维持保证金要求的水平，则补充保证金至维持保证金水平；如果期货点位变动，导致保证金账户水平高于维持保证金要求的水平的max_ratio倍，则将保证金账户水平降低至维持保证金要求的水平的max_ratio倍；如果期货点位变动，导致保证金账户水平介于上述两者之间，则无需在现金账户与保证金账户之间进行转账。
 $$
-margin\_account_{0}=|value{0}| \times mr
+margin\_account_{0}=|value{0}| \times mr\\margin\_account_{t}=min(max(|future\_value_{t}| \times mr,margin\_account_{t-1}\\+total\_future\_pnl_{t}-total\_trading\_cost_{t}),|value_{t}| \times mr \times max\_ratio)
 $$
 
-$$
-margin\_account_{t}=min(max(|future\_value_{t}| \times mr,margin\_account_{t-1}\\+total\_future\_pnl_{t}-total\_trading\_cost_{t}),|value_{t}| \times mr \times max\_ratio)
-$$
-
-**(19) interest_fee**
-
-​	现金账户利息收益：负的cash_account代表存在着资金挪用或者资金拆解，所以会得到正的利息费用；反之，如果cash_account为正，可以投资银行间隔夜拆解市场，赚取利息收益，则利息费用为负。
+**(19) interest_fee**: 现金账户利息收益：负的cash_account代表存在着资金挪用或者资金拆解，所以会得到正的利息费用；反之，如果cash_account为正，可以投资银行间隔夜拆解市场，赚取利息收益，则利息费用为负。
 $$
 interest\_fee_{t}=-cash\_account_{t-1} \times ir/365
 $$
-**(20) delta_nav**
-
-​	净值变动：每期净值的变动都仅由股指期货损益、交易成本和利息费用构成。
+**(20) delta_nav**: 净值变动：每期净值的变动都仅由股指期货损益、交易成本和利息费用构成。
 $$
 \Delta nav_{t}=total\_pnl_{t}-total\_trading_cost_{t}-interest\_fee_{t}
 $$
-**(21) nav**
-
-​	资产净值：每期资产净值的存量。
+**(21) nav**: 资产净值：每期资产净值的存量。
 $$
 nav_{t}=\Sigma_{i=0}^t\Delta nav_{i}
 $$
-**(22) cash_account**
-
-​	现金账户数额：现金账户在第一期开仓时，用于缴纳交易手续费；在后续期时，作为margin_account设定值的补足水平的配平项。
+**(22) cash_account**: 现金账户数额：现金账户在第一期开仓时，用于缴纳交易手续费；在后续期时，作为margin_account设定值的补足水平的配平项。
 $$
 cash\_account_{t}=nav_{t}-margin\_account_{t}
 $$

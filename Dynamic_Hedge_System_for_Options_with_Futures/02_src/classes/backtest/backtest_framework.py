@@ -81,7 +81,7 @@ class BacktestFramework:
         self.rollover_trading_cost = self.total_trading_cost - self.hedging_trading_cost
 
     def calculate_pnl(self):
-        self.get_index_position()
+        #self.get_index_position()
         self.get_option_pnl()
         self.single_future_pnl = self.strategy_obj.future_price.diff().fillna(0) * self.future_position.shift(1).fillna(0) * self.option_obj.multiplier
         self.total_future_pnl = self.single_future_pnl.apply(lambda x: x.sum(), axis=1)
@@ -98,7 +98,6 @@ class BacktestFramework:
         self.cum_basis_pnl = self.basis_pnl.cumsum()
 
     def calculate_total_pnl(self):
-        self.calculate_pnl()
         self.calculate_account_info()
         #整体收益
         self.total_pnl = (self.total_future_pnl + self.index_pnl + self.basis_pnl +self.option_pnl - self.total_trading_cost -\
@@ -179,7 +178,6 @@ class BacktestFramework:
         #fig3.savefig('../03_img/交易成本-名义本金分析.jpg')
 
         #期货对冲端收益拆解
-        self.calculate_pnl()
         self.calculate_total_pnl()
         fig4, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
         ax.plot(self.index_position.index,self.total_pnl/self.notional,label='整体收益/名义本金',
@@ -241,7 +239,6 @@ class BacktestFramework:
         #fig9.savefig('../03_img/交易成本-名义本金.jpg')
 
         #保证金账户水平序列和现金账户水平序列-折线图
-        self.calculate_account_info()
         fig10, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
         ax.plot(self.account_info.index, self.account_info.loc[:, 'margin_account'], label='保证金账户',
                 color='black', linewidth=1)
