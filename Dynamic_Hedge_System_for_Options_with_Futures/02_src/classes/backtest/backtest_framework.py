@@ -3,6 +3,7 @@ from classes.strategy.Combinator import Combinator
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 from matplotlib.backends.backend_pdf import PdfPages
 
 
@@ -170,6 +171,7 @@ class BacktestFramework:
         ax.legend()
         y_ticks = ax.get_yticks()
         y_ticklabels = [str(round(i, 2)) + 'bp' for i in y_ticks]
+        ax.yaxis.set_major_locator(mticker.FixedLocator(y_ticks))
         ax.set_yticklabels(y_ticklabels)
         ax.set_xlabel('样本日')
         ax.set_ylabel('交易成本/名义本金')
