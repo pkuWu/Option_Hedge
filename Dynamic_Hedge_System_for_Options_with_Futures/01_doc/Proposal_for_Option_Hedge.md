@@ -35,37 +35,85 @@ option_type = {'VanillaCall': '看涨期权',
 
 **香草期权greeks计算方法：**
 
+*看涨期权：*
+
 (1) delta
-
+$$
+delta = N(d_1)\\ d_1=\frac{ln(\frac{S}{K})+(r+\frac{1}{2}\sigma^2)T}{\sigma\sqrt{T}},d_2=d_1-\sigma\sqrt{T}
+$$
 (2) gamma
-
+$$
+gamma=\frac{N'(d_1)}{S\sigma\sqrt{T}}
+$$
 (3) theta
-
+$$
+theta=-\frac{SN'(d_1)\sigma}{2\sqrt{T}}-rKe^{-rT}N(d_2)
+$$
 (4) vega
+$$
+vega=S\sqrt{T}N'(d_1)
+$$
+*看跌期权：*
 
+(1) delta
+$$
+delta = N(d_1)-1
+$$
+(2) gamma
+$$
+gamma=\frac{N'(d_1)}{S\sigma\sqrt{T}}
+$$
+(3) theta
+$$
+theta=-\frac{SN'(d_1)\sigma}{2\sqrt{T}}+rKe^{-rT}N(-d_2)
+$$
+(4) vege
+$$
+vega=S\sqrt{T}N'(d_1)
+$$
 **香草期权cash_greeks计算方法：**
 
 (1) cash_delta
-
+$$
+cash\_delta=delta\times S\times multiplier
+$$
 (2) cash_gamma
-
+$$
+cash\_gamma=gamma\times \frac{S^2}{100} \times multiplier
+$$
 (3) cash_theta
-
+$$
+cash\_theta=\frac{theta\times multiplier}{252}
+$$
 **期权组合greeks计算**：组合内香草期权的greeks线性相加。
 
 **期权收益分解：**
 
 (1) option_pnl
-
+$$
+option\_pnl=\Delta(option\_value)=\Delta(option\_price\times multiplier)\\=\Delta(SN{(d_1)}-Ke^{-rT}N(d_2)\times multiplier)
+$$
 (2) delta_pnl
-
+$$
+delta\_pnl=delta\times \Delta S
+$$
 (3) gamma_pnl
-
+$$
+gamma\_pnl=\frac{1}{2}\times gamma\times (\Delta S)^2
+$$
 (4) theta_pnl
-
+$$
+theta\_pnl=theta\times \Delta t
+$$
 (5) vega_pnl
-
+$$
+vega\_pnl=vega\times \Delta \sigma
+$$
 (6) high_order_pnl
+$$
+high\_order\_pnl=option\_pnl-delta\_pnl-gamma\_pnl-theta\_pnl-vega\_pnl
+$$
+
 
 ------
 
