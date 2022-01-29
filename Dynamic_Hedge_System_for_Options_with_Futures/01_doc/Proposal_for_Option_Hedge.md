@@ -157,20 +157,48 @@ $$
 $$
 rollover\_trading\_cost_{t}=total\_trading\_cost_{t}-hedging\_trading\_cost_{t}
 $$
-(11) single_future_pnl
+**(11) single_future_pnl**
 
-(12) total_future_pnl
+​	第i个股指期货在第t个时间段上产生的pnl。
+$$
+single\_future\_pnl_{i,t}=(future\_price_{i,t}-future\_price_{i,t-1})×future\_position_{i,t-1}×multiplier
+$$
+**(12) total_future_pnl**
 
-(13) index_pnl
+​	股指期货组合在第t个时间段上产生的整体pnl。
+$$
+total\_future\_pnl_{t}=\Sigma_{i}single\_future\_pnl_{i,t}
+$$
+**(13) index_pnl**
 
-(14) basis_pnl
+​	股指对冲收益：
+$$
+index\_pnl_{t}=(index\_price_{t}-index\_price_{t-1})×total\_index\_position_{t-1}×multiplier
+$$
+**(14) basis_pnl**
 
-(15) cum_total_pnl
+​	基差收益：
+$$
+basic\_pnl_{t}=total\_future\_pnl_{t}-index\_pnl_{t}
+$$
+**(15) cum_total_pnl**
 
-(16) cum_index_pnl
+​	期货对冲端累积收益：
+$$
+cum\_total\_pnl_{t}=\Sigma_{j=0}^ttotal\_future\_pnl_{j}
+$$
+**(16) cum_index_pnl**
 
-(17) cum_basis -pnl
+​	对冲端指数累积收益：
+$$
+cum\_index\_pnl_{t}=\Sigma_{j=0}^tindex\_pnl_{j}
+$$
+**(17) cum_basis_pnl**
 
+​	基差累积收益：
+$$
+cum\_basis\_pnl_{t}=\Sigma_{j=0}^tbasis\_pnl_{j}
+$$
 **(18) margin_account**
 
 ​	保证金账户数额：建仓时，使保证金账户的存款恰好等于维持保证金要求的数额，在随后的时点上，如果期货点位变动，导致保证金账户水平低于维持保证金要求的水平，则补充保证金至维持保证金水平；如果期货点位变动，导致保证金账户水平高于维持保证金要求的水平的max_ratio倍，则将保证金账户水平降低至维持保证金要求的水平的max_ratio倍；如果期货点位变动，导致保证金账户水平介于上述两者之间，则无需在现金账户与保证金账户之间进行转账。
