@@ -321,13 +321,53 @@ $$
 
 **（二）delta对冲敞口维度**
 
-(1) HedgeAll
+**(1) HedgeAll**
 
-(2) HedgeHalf
+​	对冲全部的Delta敞口
 
-(3) WW_hedge
+**(2) HedgeHalf**
 
-(4) Zakamouline
+​	对冲一半的Delta敞口
+
+**(3) WW_hedge**
+
+​	按照Whalley-Wilmott方法构建delta对冲带
+
+- 当持有期货的delta在对冲带内时，不进行对冲
+
+- 当持有期货的delta突破对冲带上界，则调整头寸使delta等于对冲带上界
+
+- 当持有期货的delta突破对冲带下界，则调整头寸使delta等于对冲带下界
+
+- WW对冲带：$\Delta=\frac{\partial V}{\partial S}±H_0,H_0 =(\frac{3}{2}\frac{ e^{-rT} \lambda S \Gamma^2}{γ})^{1/3} $
+
+  其中$\gamma$为风险厌恶系数，模型默认为1，$\lambda =\frac{tradingcost}{NS}$为按比例计算的交易成本，模型默认为0.005，N为证券交易的总数量。
+
+  若期权有不同到期日，以距离到期日最短的期权的$T$计算$H_0$参数。
+
+**(4) Zakamouline**
+
+按照Zakamouline方法构建delta对冲带
+
+- 当持有期货的delta在对冲带内时，不进行对冲
+
+- 当持有期货的delta突破对冲带上界，则调整头寸使delta等于对冲带上界
+
+- 当持有期货的delta突破对冲带下界，则调整头寸使delta等于对冲带下界
+
+- Zakamouline对冲带：$\Delta=\frac{\partial V(\sigma_m)}{\partial S}±(H_0+H_1),H_0 =\frac{\lambda}{γS\sigma^2T},H_1 = 1.12\lambda^{0.31}T^{0.05}(\frac{e^{-rT}}{\sigma})^{0.25}(\frac{\abs{\Gamma}}{\gamma})^{0.5}$
+
+  其中，$\sigma_m = \sigma \sqrt{1+K}, K=-4.76\frac{\lambda^{0.78}}{T^{0.02}}(\frac{e^{-rT}}{\sigma})^{0.25}(\gamma S^2 \abs{\Gamma})^{0.15}$
+
+  ​			$\gamma$为风险厌恶系数，模型默认为1，
+
+  ​			$\lambda =\frac{tradingcost}{NS}$为按比例计算的交易成本，模型默认为0.005，N为证券交易的总数量。
+
+​	在计算期权组合的Zakamouline对冲带时：
+
+1. 先分别计算构成组合的每个期权的$\sigma_m$和$ \Delta_{im} =\frac{\partial V(\sigma_m)}{\partial S}$ ，
+2. 将各个期权调整后的$\Delta_{im}$ 求和得期权组合的$\Delta_{m} = \sum_i \Delta_{im}$
+3. 若期权有不同到期日，以距离到期日最短的期权的$T$计算$H_1,H_0,K$等参数。
 
 ------
 
