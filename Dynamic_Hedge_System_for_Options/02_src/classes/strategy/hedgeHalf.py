@@ -13,3 +13,4 @@ class HedgeHalf(StrategyBase):
         for t_row in range(1,t_length):
             position[t_row] = np.round((hedge_all_position[t_row]+position[t_row-1])/2/self.MULTIPLIER)*self.MULTIPLIER
         return position
+    # todo 修改为df_hedge

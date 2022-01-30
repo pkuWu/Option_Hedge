@@ -13,9 +13,10 @@ import numpy as np
 
 class OptionPortfolio:
     def __init__(self):
-        self.decompose_df = pd.DataFrame(data=None, columns=['option_value_change', 'delta_value', 'theta_value', 'gamma_value',
-                                                             'vega_value', 'high_order_value'])
+        self.decompose_df = pd.DataFrame(data=None, columns=['option_pnl','delta_pnl', 'theta_pnl', 'gamma_pnl',
+                                                             'vega_pnl', 'higher_order_pnl'])
         self.option_list = []
+        self.basic_paras_df = None
 
     def get_option_list(self, para_dict):
         self.option_type = para_dict.get('option_type')
@@ -105,14 +106,14 @@ class OptionPortfolio:
         self.basic_paras_df = self.option_list[0].get('option_object').basic_paras_df
 
     def calculate_return_decomposition(self):
-        self.decompose_df.loc[:, 'option_value_change'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
-        self.decompose_df.loc[:, 'delta_value'] = self.greek_df.loc[:, 'delta'] * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) * self.stock_num
-        self.decompose_df.loc[:, 'gamma_value'] = self.greek_df.loc[:, 'gamma'] * 0.5 * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) ** 2 * self.stock_num
-        self.decompose_df.loc[:, 'theta_value'] = self.greek_df.loc[:, 'theta'] / 252 * self.stock_num
-        self.decompose_df.loc[self.decompose_df.index[0], 'theta_value'] = 0
-        self.decompose_df.loc[:, 'vega_value'] = self.greek_df.loc[:, 'vega'] * self.basic_paras_df.loc[:, 'sigma'].diff().fillna(0) * self.stock_num
-        self.decompose_df.loc[:, 'high_order_value'] = self.decompose_df.loc[:, 'option_value_change'] - self.decompose_df.loc[:, 'delta_value']\
-                                                   - self.decompose_df.loc[:,'gamma_value'] - self.decompose_df.loc[:,'theta_value'] - self.decompose_df.loc[:,'vega_value']
+        self.decompose_df.loc[:, 'option_pnl'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
+        self.decompose_df.loc[:, 'delta_pnl'] = self.greek_df.loc[:, 'delta'] * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) * self.stock_num
+        self.decompose_df.loc[:, 'gamma_pnl'] = self.greek_df.loc[:, 'gamma'] * 0.5 * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) ** 2 * self.stock_num
+        self.decompose_df.loc[:, 'theta_pnl'] = self.greek_df.loc[:, 'theta'] / 252 * self.stock_num
+        self.decompose_df.loc[self.decompose_df.index[0], 'theta_pnl'] = 0
+        self.decompose_df.loc[:, 'vega_pnl'] = self.greek_df.loc[:, 'vega'] * self.basic_paras_df.loc[:, 'sigma'].diff().fillna(0) * self.stock_num
+        self.decompose_df.loc[:, 'higher_order_pnl'] = self.decompose_df.loc[:, 'option_pnl'] - self.decompose_df.loc[:, 'delta_pnl']\
+                                                   - self.decompose_df.loc[:,'gamma_pnl'] - self.decompose_df.loc[:,'theta_pnl'] - self.decompose_df.loc[:,'vega_pnl']
 
     def get_return_decomposition(self):
         if self.greek_df.empty:
@@ -129,12 +130,24 @@ class OptionPortfolio:
         ax1.set_xlabel('Time')
         ax1.set_ylabel('Value')
         ax1.invert_xaxis()
-        df_plot.loc[:, ['option_value_change', 'delta_value', 'gamma_value', 'theta_value', 'vega_value']].cumsum().plot(ax=ax1)
+        df_plot.loc[:, ['option_pnl', 'delta_pnl', 'gamma_pnl', 'theta_pnl', 'vega_pnl']].cumsum().plot(ax=ax1)
         plt.show()
 
     def get_greek_df(self):
         self.calculate_greeks()
         return self.greek_df
+
+    def get_basic_paras_df(self):
+        if self.basic_paras_df is None:
+            self.calculate_greeks()
+        return self.basic_paras_df
+
+    def get_size(self,para):
+        size = para.get('notional')/para.get('start_price')
+        return size
+
+
+
 
 # class OptionPortfolio(OptionBase):
 #     def __init__(self):

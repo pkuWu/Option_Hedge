@@ -23,14 +23,13 @@ op = OptionPortfolio()
 op.get_option_list(para_dict=paras)
 greek_df = op.get_greek_df()
 basic_paras_df = op.get_basic_paras_df()
-size = op.get_size()
+size = op.get_size(paras)
 
 #%%
 zk = Zakamouline()
-zk.calculate_hedge_position(greek_df, basic_paras_df, r=0.04, K=5.42, size=size)
-zk_hedge_df = zk.get_hedge_df()
+zk_hedge_df=zk.calculate_hedge_position(greek_df, basic_paras_df, r=0.04, K=5.42, size=size)
+
 
 #%%
 ww = WW_Hedge()
-ww.calculate_hedge_position(greek_df, basic_paras_df, r=0.04, K=5.42, size=size)
-ww_hedge_df = ww.get_hedge_df()
+ww_hedge_df=ww.calculate_hedge_position(greek_df, basic_paras_df, r=0.04, K=5.42, size=size)
