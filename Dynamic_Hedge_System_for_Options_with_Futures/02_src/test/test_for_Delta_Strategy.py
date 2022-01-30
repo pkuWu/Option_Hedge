@@ -26,11 +26,11 @@ hedgehalf.calculate_target_delta() # 计算需要对冲的cash_delta
 hedgehalf_target_delta = hedgehalf.get_target_delta()# 返回需要对冲的cash_delta
 
 #Zakamouline
-zakahedge = Zakamouline().get_option_info(option.portfolio_position, option.option_basket, option.greek_df, option.public_df)
-zakahedge.calculate_target_delta()
+zakahedge = Zakamouline().get_option_info(option.stock_index_code, option.portfolio_position, option.option_basket, option.greek_df, option.public_df)
 zakahedge_target_delta = zakahedge.get_target_delta()
+zakahedge.visualize_Zaka()
 
 #WW_Hedge
-wwhedge = WW_Hedge().get_option_info(option.portfolio_position, option.option_basket, option.greek_df, option.public_df)
-wwhedge.calculate_target_delta()
+wwhedge = WW_Hedge().get_option_info(option.stock_index_code, option.portfolio_position, option.option_basket, option.greek_df, option.public_df)
 wwhedge_target_delta = wwhedge.get_target_delta()
+wwhedge.visualize_WW()

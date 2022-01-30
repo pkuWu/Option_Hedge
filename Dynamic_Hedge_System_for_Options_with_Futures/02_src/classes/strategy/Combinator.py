@@ -44,7 +44,7 @@ class Combinator:
         self.future_price = self.month_obj.future_data['close'].loc[self.trade_dates]
 
     def set_delta_strategy(self, delta_strategy):
-        self.delta_obj = eval(delta_strategy)().get_option_info(self.portfolio_position, self.option_basket, self.greek_df, self.public_df)
+        self.delta_obj = eval(delta_strategy)().get_option_info(self.stock_index_code,self.portfolio_position, self.option_basket, self.greek_df, self.public_df)
         self.target_delta = self.delta_obj.get_target_delta()
 
     def set_hedge_strategy(self, month_strategy, delta_strategy):

@@ -59,26 +59,6 @@ class StrategyBase:
         self.calculate_future_delta()
         return self.future_delta
 
-    def get_option_info(self, option): #传入的Option_Contract对象
-        self.set_paras(option.stock_index_code)
-        self.trade_dates = option.trade_dates
-        self.portfolio_position = option.portfolio_position
-        self.option_greek_df = option.get_greek_df()
-        self.public_df = option.public_df
-        self.init_future_weight()
-        self.single_option_info = dict()
-        for i in range(len(option.option_basket)):
-            option_obj = option.option_basket[i]['option_obj']
-            option_pos = option.option_basket[i]['option_pos']
-            option_class = option.option_basket[i]['option_class']
-            greek_df = option_obj.greek_df #这里的greek_df是最开始的optionBase/vanilla里有啥就有啥
-            option_r = option_obj.r
-            option_K = option_obj.K
-            left_times = greek_df['left_times']
-            self.single_option_info[i] = {'option_class':option_class,'option_pos':option_pos,'greek_df':greek_df,'r':option_r,'K':option_K,
-                                          'left_times':left_times}
-        return self
-
     @abstractmethod
     def get_hedging_position(self,greek_df,stock_index_price):
         pass
