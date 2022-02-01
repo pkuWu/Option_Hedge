@@ -145,13 +145,42 @@ class Backtest:
     def generate_report(self):
         rt = ReportTemplate()
         story = list()
-        story.append(Paragraph('<para><b>对冲回测报告</b></para>', style=rt.txt_style['标题1']))
+        # story.append(Paragraph('<para><b>对冲回测报告</b></para>', style=rt.txt_style['标题1']))
+        story.append(Paragraph('期权对冲回测报告', style=rt.txt_style['标题1']))
+        story.append(Spacer(240, 20))
+        story.append(Paragraph('1.参数详情', style=rt.txt_style['标题2']))
+        story.append(Spacer(240, 20))
+        table1_data = [
+            ['参数名称', '参数数值'],
+            ['期权类型', self.paras.get('option_type')],
+            ['名义金额', self.paras.get('notional')],
+            ['发行日期', self.paras.get('start_date')],
+            ['行权日期', self.paras.get('end_date')],
+            ['标的股票', self.paras.get('stock_code')],
+            ['标的价格', self.paras.get('start_price')],
+            ['对冲策略', re.findall(r'\'(.*?)\'', str(type(self.strategy)))[0].split('.')[-1]]
+            ]
+        story.append(rt.gen_table(table1_data))
         story.append(Spacer(240, 10))
-        story.append(Paragraph('股票对冲回测', style=rt.txt_style['标题2']))
+        story.append(Paragraph('2.回测结果', style=rt.txt_style['标题2']))
+        story.append(Spacer(240, 10))
+        story.append(Paragraph('2.1 股票对冲回测', style=rt.txt_style['标题3']))
+        story.append(Spacer(240, 10))
+        table2_data = [
+            ['总损益', '股票损益', '期权损益', '交易成本', '最小现金账户', '最大回撤'],
+            self.hedge_pnl_summary.tolist()
+        ]
+        story.append(rt.gen_table(table2_data))
         story.append(Spacer(240, 10))
         story.append(rt.gen_img('../03_img/股票对冲回测.jpg'))
         # story.append(Spacer(240, 20))
-        story.append(Paragraph('对冲收益分解', style=rt.txt_style['标题2']))
+        story.append(Paragraph('2.2 对冲收益分解', style=rt.txt_style['标题3']))
+        story.append(Spacer(240, 10))
+        table3_data = [
+            ['gamma', 'vega', 'theta', '高阶项', '未对冲损益', '交易成本', '总损益'],
+            self.decomposition_summary.tolist()
+        ]
+        story.append(rt.gen_table(table3_data))
         story.append(Spacer(240, 10))
         story.append(rt.gen_img('../03_img/对冲收益分解.jpg'))
         doc = SimpleDocTemplate('./report/对冲回测报告.pdf')
