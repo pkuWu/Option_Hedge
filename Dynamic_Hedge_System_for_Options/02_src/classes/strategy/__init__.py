@@ -8,4 +8,4 @@ from .hedgeHalf import HedgeHalf
 from .ww_Hedge import WW_Hedge
 from .zakamouline import Zakamouline
 
-__all__ = ['HedgeAll','HedgeHalf', 'WW_Hedge', 'Zakamouline']
+__all__ = ['HedgeAll', 'HedgeHalf', 'WW_Hedge', 'Zakamouline']

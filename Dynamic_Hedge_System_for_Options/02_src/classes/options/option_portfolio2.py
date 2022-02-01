@@ -118,7 +118,8 @@ class OptionPortfolio:
     def get_return_decomposition(self):
         if self.greek_df.empty:
             self.calculate_greeks()
-        self.calculate_return_decomposition()
+        if self.decompose_df.empty:
+            self.calculate_return_decomposition()
         return self.decompose_df
 
     def decomposition_vis(self):

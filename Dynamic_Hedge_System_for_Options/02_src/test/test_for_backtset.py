@@ -4,7 +4,8 @@
 # @Author  : Hao Wu
 # @File    : .py
 from classes.backtest.backtest import Backtest
-backtest=Backtest()
+
+backtest = Backtest()
 paras = {
     'option_type': 'VanillaCall',
     'notional': 12e6,
@@ -14,7 +15,7 @@ paras = {
     'stock_code': '300277.SZ',
     'start_price': 6.19
 }
-backtest.set_strategy('WW_Hedge')
-backtest.set_option_portfolio(paras)
-backtest.run_backtest(r=0.04, K=paras.get('K'), size=backtest.size)
-backtest.plot_analysis()
+backtest.set_paras_by_dict(paras)
+backtest.set_strategy('Zakamouline')
+# backtest.set_strategy('WW_Hedge')
+backtest.run_backtest()
