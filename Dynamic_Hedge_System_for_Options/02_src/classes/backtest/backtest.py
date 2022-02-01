@@ -8,9 +8,10 @@ import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtk
 from ..options.option_portfolio2 import OptionPortfolio as OP
 from ..strategy import *
+from ..backtest.reportTemplate import ReportTemplate
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, ListItem, ListFlowable
 
 class Backtest:
     def __init__(self):
@@ -59,6 +60,7 @@ class Backtest:
         self.df_backtest.loc[:, 'trade_dummy'] = 1
         self.df_backtest.loc[self.df_backtest.loc[:, 'stock_position'].diff() == 0, 'trade_dummy'] = 0
         self.hedge_pnl_analysis()
+        self.generate_report()
 
     def hedge_pnl_analysis(self):
         self.trade_dates = pd.to_datetime(self.df_backtest.index.values)
@@ -139,6 +141,21 @@ class Backtest:
                    self.decomposition_summary['total_trading_cost']))
         # plt.show()
         fig.savefig('../03_img/对冲收益分解.jpg')
+
+    def generate_report(self):
+        rt = ReportTemplate()
+        story = list()
+        story.append(Paragraph('<para><b>对冲回测报告</b></para>', style=rt.txt_style['标题1']))
+        story.append(Spacer(240, 10))
+        story.append(Paragraph('股票对冲回测', style=rt.txt_style['标题2']))
+        story.append(Spacer(240, 10))
+        story.append(rt.gen_img('../03_img/股票对冲回测.jpg'))
+        # story.append(Spacer(240, 20))
+        story.append(Paragraph('对冲收益分解', style=rt.txt_style['标题2']))
+        story.append(Spacer(240, 10))
+        story.append(rt.gen_img('../03_img/对冲收益分解.jpg'))
+        doc = SimpleDocTemplate('./report/对冲回测报告.pdf')
+        doc.build(story)
 
     @staticmethod
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):
