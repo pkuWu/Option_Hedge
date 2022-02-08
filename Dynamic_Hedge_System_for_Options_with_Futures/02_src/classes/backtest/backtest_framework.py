@@ -100,7 +100,7 @@ class BacktestFramework:
     def calculate_total_pnl(self):
         self.calculate_account_info()
         #整体收益
-        self.total_pnl = (self.total_future_pnl + self.index_pnl + self.basis_pnl +self.option_pnl - self.total_trading_cost -\
+        self.total_pnl = (self.total_future_pnl + self.option_pnl - self.total_trading_cost -\
                          self.account_info['interest_fee']).cumsum()
 
     def get_option_pnl(self):
@@ -126,10 +126,6 @@ class BacktestFramework:
                 self.account_info.loc[self.account_info.index[i+1], 'interest_fee'] = -self.account_info.loc[self.account_info.index[i], 'cash_account'] * self.ir / 365
 
     def visualize_analysis(self, report=True):
-        # 期权收益分解
-        self.option_obj.visualize_pnl()
-        fig0 = self.option_obj.fig
-
         # 期货持仓分析
         self.to_sparse_matrix()
         fig1, ax1 = self.init_canvas([0.05, 0.08, 0.88, 0.87])
@@ -177,26 +173,51 @@ class BacktestFramework:
         ax.set_title('交易成本分析，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
         #fig3.savefig('../03_img/交易成本-名义本金分析.jpg')
 
-        #期货对冲端收益拆解
+        #整体收益拆解
+        self.option_obj.calculate_portfolio_pnl_df()
         self.calculate_total_pnl()
         fig4, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
         ax.plot(self.index_position.index,self.total_pnl/self.notional,label='整体收益/名义本金',
                 color='black', linewidth=2)
         ax.plot(self.index_position.index, self.cum_total_pnl/self.notional, label='期货端收益/名义本金',
                 color=self.MCOLORS[5], linewidth=1)
-        ax.plot(self.index_position.index, self.option_pnl/self.notional, label='期权端收益/名义本金',
+        ax.plot(self.index_position.index, self.option_pnl.cumsum()/self.notional, label='期权端收益/名义本金',
                 color=self.MCOLORS[0],linewidth=1)
-        ax.plot(self.index_position.index, self.cum_index_pnl/self.notional, '--', label='指数收益/名义本金',
-                color='gray', linewidth=1)
-        ax.plot(self.index_position.index, self.cum_basis_pnl/self.notional, label='基差收益/名义本金',
-                color=self.MCOLORS[4], linewidth=1)
-        ax.plot(self.index_position.index, self.total_trading_cost/self.notional, ':', label='交易成本/名义本金',
+        ax.plot(self.index_position.index, self.total_trading_cost.cumsum()/self.notional, ':', label='累计交易成本/名义本金',
                 color=self.MCOLORS[1], linewidth=1)
+        ax.plot(self.index_position.index, self.account_info['interest_fee'].cumsum()/self.notional, ':', label='现金账户利息损益/名义本金',
+                color=self.MCOLORS[4], linewidth=1)
         ax.legend()
         ax.set_xlabel('样本日')
         ax.set_ylabel('收益/名义本金')
         ax.set_title('总体收益分解，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
         #fig4.savefig('../03_img/总体收益分解.jpg')
+
+        #期货端收益分解
+        fig15, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
+        ax.plot(self.index_position.index, self.cum_total_pnl/self.notional, label='期货端收益/名义本金',
+                color=self.MCOLORS[5], linewidth=1)
+        ax.plot(self.index_position.index, self.cum_index_pnl/self.notional, '--', label='指数收益/名义本金',
+                color='gray', linewidth=1)
+        ax.plot(self.index_position.index, self.cum_basis_pnl/self.notional, label='基差收益/名义本金',
+                color=self.MCOLORS[4], linewidth=1)
+        ax.legend()
+        ax.set_xlabel('样本日')
+        ax.set_ylabel('收益/名义本金')
+        ax.set_title('期货端收益分解，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
+
+        # 期权收益分解
+        fig0, ax = self.init_canvas([0.05, 0.08, 0.88, 0.87])
+        ax.plot(self.option_obj.trade_dates, self.option_obj.pnl_df.loc[:, 'delta_pnl'].cumsum() + self.cum_total_pnl, label='adj_delta_pnl')
+        ax.plot(self.option_obj.trade_dates, self.option_obj.pnl_df.loc[:, 'gamma_pnl'].cumsum(), label='gamma_pnl')
+        ax.plot(self.option_obj.trade_dates, self.option_obj.pnl_df.loc[:, 'vega_pnl'].cumsum(), label='vega_pnl')
+        ax.plot(self.option_obj.trade_dates, self.option_obj.pnl_df.loc[:, 'theta_pnl'].cumsum(), label='theta_pnl')
+        ax.plot(self.option_obj.trade_dates, self.option_obj.pnl_df.loc[:, 'option_pnl'].cumsum() + self.cum_total_pnl, label='adj_option_pnl')
+        ax.plot(self.option_obj.trade_dates, self.option_obj.pnl_df.loc[:, 'high_order_pnl'].cumsum(), label='high_order_pnl')
+        ax.legend()
+        ax.set_xlabel('样本日')
+        ax.set_ylabel('收益')
+        ax.set_title('期权收益分解，策略:{0:s}+{1:s}'.format(self.month_strategy, self.delta_strategy))
 
         # 期货端收益/名义本金频数分布直方图
         fig5, ax = self.init_canvas([0.08, 0.08, 0.88, 0.87])
@@ -285,13 +306,14 @@ class BacktestFramework:
         #fig14.savefig('../03_img/现金账户隐含资金成本-名义本金频数分布直方图.jpg')
 
         if report:
-            report_name = '../03_img/期权类型：{0:s}+{1:s}，对冲策略：{2:s}+{3:s}.pdf'.format(self.strategy_obj.stock_index_name, self.option_obj.option_name, self.month_strategy, self.delta_strategy)
+            report_name = '../02_src/report/期权类型：{0:s}+{1:s}，对冲策略：{2:s}+{3:s}.pdf'.format(self.strategy_obj.stock_index_name, self.option_obj.option_name, self.month_strategy, self.delta_strategy)
             with PdfPages(report_name, 'wb+') as pdf:
                 pdf.savefig(fig0)
                 pdf.savefig(fig1)
                 pdf.savefig(fig2)
                 pdf.savefig(fig3)
                 pdf.savefig(fig4)
+                pdf.savefig(fig15)
                 pdf.savefig(fig5)
                 pdf.savefig(fig6)
                 pdf.savefig(fig7)
