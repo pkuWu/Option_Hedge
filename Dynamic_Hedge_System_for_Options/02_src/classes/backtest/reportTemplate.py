@@ -20,7 +20,7 @@ class ReportTemplate:
     def txt_template(self):
         pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
         pdfmetrics.registerFont(TTFont("SimKai", "SimKai.ttf"))
-        pdfmetrics.registerFont(TTFont("SimSun", "SimSun.ttf"))
+        pdfmetrics.registerFont(TTFont("SimSun", "SimSun.ttc"))
         self.txt_style = getSampleStyleSheet()
         self.txt_style.add(ParagraphStyle(name='正文', alignment=TA_JUSTIFY, fontName='SimKai', fontSize=12,
                                           textColor=colors.black))

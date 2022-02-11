@@ -40,7 +40,7 @@ class OptionBase:
         self.K = None
         self.H = None
         self.trade_dates = None
-        self.look_back_num = 10
+        self.look_back_num = 30
 
     def set_paras_by_dict(self, para_dict):
         self.parameters = para_dict

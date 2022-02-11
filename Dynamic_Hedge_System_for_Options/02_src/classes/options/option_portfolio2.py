@@ -107,11 +107,11 @@ class OptionPortfolio:
 
     def calculate_return_decomposition(self):
         self.decompose_df.loc[:, 'option_pnl'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
-        self.decompose_df.loc[:, 'delta_pnl'] = self.greek_df.loc[:, 'delta'] * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) * self.stock_num
-        self.decompose_df.loc[:, 'gamma_pnl'] = self.greek_df.loc[:, 'gamma'] * 0.5 * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) ** 2 * self.stock_num
-        self.decompose_df.loc[:, 'theta_pnl'] = self.greek_df.loc[:, 'theta'] / 252 * self.stock_num
+        self.decompose_df.loc[:, 'delta_pnl'] = self.greek_df.loc[:, 'delta'].shift(1).fillna(0) * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) * self.stock_num
+        self.decompose_df.loc[:, 'gamma_pnl'] = self.greek_df.loc[:, 'gamma'].shift(1).fillna(0) * 0.5 * self.basic_paras_df.loc[:, 'stock_price'].diff().fillna(0) ** 2 * self.stock_num
+        self.decompose_df.loc[:, 'theta_pnl'] = self.greek_df.loc[:, 'theta'].shift(1).fillna(0) / 252 * self.stock_num
         self.decompose_df.loc[self.decompose_df.index[0], 'theta_pnl'] = 0
-        self.decompose_df.loc[:, 'vega_pnl'] = self.greek_df.loc[:, 'vega'] * self.basic_paras_df.loc[:, 'sigma'].diff().fillna(0) * self.stock_num
+        self.decompose_df.loc[:, 'vega_pnl'] = self.greek_df.loc[:, 'vega'].shift(1).fillna(0) * self.basic_paras_df.loc[:, 'sigma'].diff().fillna(0) * self.stock_num
         self.decompose_df.loc[:, 'higher_order_pnl'] = self.decompose_df.loc[:, 'option_pnl'] - self.decompose_df.loc[:, 'delta_pnl']\
                                                    - self.decompose_df.loc[:,'gamma_pnl'] - self.decompose_df.loc[:,'theta_pnl'] - self.decompose_df.loc[:,'vega_pnl']
 
