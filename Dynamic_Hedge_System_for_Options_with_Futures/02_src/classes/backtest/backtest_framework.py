@@ -121,7 +121,7 @@ class BacktestFramework:
         self.account_info.loc[self.account_info.index[0], 'interest_fee'] = 0
         for i in range(len(self.account_info)):
             self.account_info.loc[self.account_info.index[i], 'delta_nav'] = self.total_future_pnl[i] - self.total_trading_cost[i] - self.account_info.loc[self.account_info.index[i], 'interest_fee']
-            self.account_info.loc[self.account_info.index[i], 'nav'] = self.account_info.loc[self.account_info.index[i], 'delta_nav'] + self.account_info.loc[self.account_info.index[i], 'delta_nav'].cumsum()[0]
+            self.account_info.loc[self.account_info.index[i], 'nav'] = self.account_info.loc[:, 'delta_nav'].cumsum()[i]
             self.account_info.loc[self.account_info.index[i], 'cash_account'] = self.account_info.loc[self.account_info.index[i], 'nav'] - self.account_info.loc[self.account_info.index[i], 'margin_account']
             if i < len(self.account_info)-1:
                 self.account_info.loc[self.account_info.index[i+1], 'interest_fee'] = -self.account_info.loc[self.account_info.index[i], 'cash_account'] * self.ir / 365
