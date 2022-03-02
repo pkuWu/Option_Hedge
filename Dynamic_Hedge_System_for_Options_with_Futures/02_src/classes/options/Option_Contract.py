@@ -366,7 +366,7 @@ class Option_Contract:
         self.pnl_df.loc[:, 'delta_pnl'] = self.greek_df.loc[:, 'delta']*self.public_df.loc[:, 'stock_index_price'].diff().fillna(0)*self.multiplier
         self.pnl_df.loc[:, 'gamma_pnl'] = 0.5*self.greek_df.loc[:, 'gamma'] * self.public_df.loc[:, 'stock_index_price'].diff().fillna(0)**2*self.multiplier
         self.pnl_df.loc[:, 'vega_pnl'] = self.greek_df.loc[:, 'vega']*self.public_df.loc[:, 'sigma'].diff().fillna(0)*self.multiplier
-        self.pnl_df.loc[:, 'theta_pnl'] = self.greek_df.loc[:, 'theta']*self.public_df.loc[:, 'left_times'].diff().fillna(0)*self.multiplier
+        self.pnl_df.loc[:, 'theta_pnl'] = - self.greek_df.loc[:, 'theta']*self.public_df.loc[:, 'left_times'].diff().fillna(0)*self.multiplier
         self.pnl_df.loc[:, 'option_pnl'] = self.greek_df.loc[:, 'option_value'].diff().fillna(0)
         self.pnl_df.loc[:, 'high_order_pnl'] = self.pnl_df.loc[:, 'option_pnl']-self.pnl_df.loc[:, 'delta_pnl']-self.pnl_df.loc[:, 'gamma_pnl']-self.pnl_df.loc[:, 'vega_pnl']-self.pnl_df.loc[:, 'theta_pnl']
 
@@ -393,7 +393,7 @@ class Option_Contract:
             ax.set_title('期权类型:{0:s}，标的:{1:s}，期权费:{2:,.0f}，K:{3:,.2f}，到期日1:{4:s},到期日2:{5:s}'.format(self.option_name, self.stock_index_code, self.option_fee, self.strike_price, str(self.end_date), str(self.end_date_after)), fontsize = 10)
         ax.legend()
         self.fig = fig
-        #fig.savefig('../03_img/{0:s}收益分解.jpg'.format(self.option_name))
+        fig.savefig('../03_img/{0:s}收益分解.jpg'.format(self.option_name))
 
     @staticmethod
     def init_canvas(rect=[0.05, 0.05, 0.9, 0.9]):

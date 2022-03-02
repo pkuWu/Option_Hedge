@@ -19,7 +19,11 @@ class HedgeHalf(Delta_StrategyBase):
         super().__init__()
 
     def calculate_target_delta(self):
-        self.target_delta = -self.option_greek_df.loc[:, 'cash_delta']/2
+        self.target_delta = pd.DataFrame(columns=self.option_greek_df.columns)
+        self.target_delta[0] = -self.option_greek_df.loc[0, 'cash_delta']
+        for i in range(1,len(self.target_delta)):
+            #每次对冲增量的一半
+            self.target_delta[i] = (self.option_greek_df.loc[i,'cash_delta'] - self.option_greek_df.loc[i-1,'cash_delta'])/2
 
 # Whalley Wilmott method
 class WW_Hedge(Delta_StrategyBase):
