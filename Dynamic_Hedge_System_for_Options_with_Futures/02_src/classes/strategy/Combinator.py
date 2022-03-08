@@ -59,7 +59,7 @@ class Combinator:
 
     def calculate_future_position(self):
         self.future_delta = self.month_obj.get_future_delta()
-        self.future_position = round(self.future_weight.mul(self.target_delta, axis=0)/self.future_delta, 0)
+        self.future_position = round(self.future_weight.mul(self.target_delta['target_delta'], axis=0)/self.future_delta, 0)
 
     def get_future_position(self):
         self.calculate_future_position()
